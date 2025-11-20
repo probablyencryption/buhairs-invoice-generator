@@ -51,6 +51,8 @@ export default function SingleInvoiceForm({ onGenerate, onPreview, logoUrl, onLo
     if (invoiceData?.lastInvoiceNumber !== undefined) {
       const nextNumber = invoiceData.lastInvoiceNumber + 1;
       setInvoiceNumber(`BLH#${nextNumber}`);
+    } else {
+      setInvoiceNumber('BLH#2799');
     }
   }, [invoiceData]);
 
@@ -172,15 +174,30 @@ export default function SingleInvoiceForm({ onGenerate, onPreview, logoUrl, onLo
 
       {hasPreCode && (
         <div className="space-y-2">
-          <Label htmlFor="preCodeInput">PRE Code</Label>
-          <Input
-            id="preCodeInput"
-            value={preCode}
-            onChange={(e) => setPreCode(e.target.value)}
-            placeholder="Enter PRE code"
-            required
-            data-testid="input-pre-code"
-          />
+          <Label htmlFor="preCodeInput">PRE Code (numbers only, max 7 digits)</Label>
+          <div className="relative">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 font-semibold text-muted-foreground pointer-events-none">
+              PRE
+            </div>
+            <Input
+              id="preCodeInput"
+              value={preCode}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, '');
+                if (value.length <= 7) {
+                  setPreCode(value);
+                }
+              }}
+              placeholder="1234567"
+              className="pl-14"
+              required
+              maxLength={7}
+              data-testid="input-pre-code"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {preCode.length}/7 digits
+          </p>
         </div>
       )}
 
