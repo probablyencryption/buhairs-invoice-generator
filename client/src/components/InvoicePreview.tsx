@@ -31,7 +31,7 @@ export default function InvoicePreview({
       data-testid="invoice-preview"
     >
       <div className="absolute inset-0 p-6 flex flex-col">
-        <div className="flex justify-between items-start mb-2">
+        <div className="flex justify-between items-center mb-4">
           <div className="text-left">
             <div className="text-lg font-normal tracking-wide" style={{ fontFamily: 'Inter, sans-serif' }}>
               INVOICE {invoiceNumber}
@@ -46,14 +46,14 @@ export default function InvoicePreview({
               <img 
                 src={logoUrl} 
                 alt="Bu Luxury Hairs Logo" 
-                className="h-40 w-auto object-contain"
+                className="h-16 w-auto object-contain"
                 data-testid="invoice-logo"
               />
             </div>
           )}
         </div>
 
-        <div className="flex-1 flex flex-col items-center text-center px-8">
+        <div className="flex-1 flex flex-col items-center text-center px-8 pt-2">
           <h1 
             className="text-3xl font-bold mb-8 tracking-wider whitespace-nowrap"
             style={{ fontFamily: 'Inter, sans-serif', letterSpacing: '0.15em' }}
