@@ -33,7 +33,7 @@ export default function InvoicePreview({
       <div className="absolute inset-0 p-6 flex flex-col">
         <div className="flex justify-between items-center mb-4">
           <div className="text-left">
-            <div className="text-lg font-normal tracking-wide" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <div className="text-sm font-normal tracking-wide" style={{ fontFamily: 'Inter, sans-serif' }}>
               INVOICE {invoiceNumber}
             </div>
             <div className="text-sm mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>
