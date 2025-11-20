@@ -22,7 +22,7 @@ export default function HomePage() {
     customerName: '',
     customerPhone: '',
     customerAddress: '',
-    preCode: '' as string | undefined,
+    preCode: undefined as string | undefined,
   });
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -72,7 +72,7 @@ export default function HomePage() {
     customerAddress: string;
     preCode?: string;
   }) => {
-    setPreviewData({ ...data, preCode: data.preCode || '' });
+    setPreviewData({ ...data, preCode: data.preCode || undefined });
   };
 
   const handleSingleInvoiceGenerate = async (
@@ -86,7 +86,7 @@ export default function HomePage() {
     },
     format: 'pdf' | 'jpeg'
   ) => {
-    setPreviewData({ ...data, preCode: data.preCode || '' });
+    setPreviewData({ ...data, preCode: data.preCode || undefined });
     
     if (!invoicePreviewRef.current) {
       toast({
@@ -140,7 +140,7 @@ export default function HomePage() {
   };
 
   const handleViewInvoice = (invoice: InvoiceData) => {
-    setPreviewData({ ...invoice, preCode: invoice.preCode || '' });
+    setPreviewData({ ...invoice, preCode: invoice.preCode || undefined });
     setActiveTab('single');
     toast({
       title: 'Invoice loaded',
