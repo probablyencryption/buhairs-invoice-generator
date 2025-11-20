@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { forwardRef } from 'react';
 
 interface InvoicePreviewProps {
   invoiceNumber: string;
@@ -10,22 +10,22 @@ interface InvoicePreviewProps {
   logoUrl?: string;
 }
 
-export default function InvoicePreview({
-  invoiceNumber,
-  date,
-  customerName,
-  customerPhone,
-  customerAddress,
-  preCode,
-  logoUrl,
-}: InvoicePreviewProps) {
-  const previewRef = useRef<HTMLDivElement>(null);
+const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
+  ({
+    invoiceNumber,
+    date,
+    customerName,
+    customerPhone,
+    customerAddress,
+    preCode,
+    logoUrl,
+  }, ref) => {
 
   const addressLines = customerAddress.split('\n').filter(line => line.trim());
 
   return (
     <div 
-      ref={previewRef}
+      ref={ref}
       className="relative bg-white w-full aspect-[7/5] border-2 border-muted shadow-lg rounded-md overflow-hidden"
       style={{ maxWidth: '700px' }}
       data-testid="invoice-preview"
@@ -89,4 +89,8 @@ export default function InvoicePreview({
       </div>
     </div>
   );
-}
+});
+
+InvoicePreview.displayName = 'InvoicePreview';
+
+export default InvoicePreview;

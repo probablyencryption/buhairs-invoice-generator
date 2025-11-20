@@ -1,0 +1,28 @@
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+
+export async function generateInvoicePDF(
+  element: HTMLElement,
+  invoiceNumber: string
+): Promise<void> {
+  const canvas = await html2canvas(element, {
+    scale: 3,
+    useCORS: true,
+    logging: false,
+    backgroundColor: '#ffffff',
+  });
+
+  const imgWidth = 700;
+  const imgHeight = 500;
+  
+  const pdf = new jsPDF({
+    orientation: 'landscape',
+    unit: 'px',
+    format: [imgWidth, imgHeight],
+  });
+
+  const imgData = canvas.toDataURL('image/png');
+  pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+
+  pdf.save(`${invoiceNumber}.pdf`);
+}

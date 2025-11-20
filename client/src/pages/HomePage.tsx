@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
 import SingleInvoiceForm from '@/components/SingleInvoiceForm';
@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { FileText, History } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
+import { generateInvoicePDF } from '@/lib/pdfGenerator';
 
 export default function HomePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -26,6 +27,7 @@ export default function HomePage() {
   });
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const invoicePreviewRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const authenticated = sessionStorage.getItem('bu_authenticated');
@@ -82,12 +84,16 @@ export default function HomePage() {
         method: 'POST',
       });
       
+      setTimeout(async () => {
+        if (invoicePreviewRef.current) {
+          await generateInvoicePDF(invoicePreviewRef.current, data.invoiceNumber);
+        }
+      }, 100);
+      
       toast({
         title: 'Invoice generated',
         description: `Invoice ${data.invoiceNumber} has been created and downloaded.`,
       });
-      
-      console.log('Generate PDF for:', data);
     } catch (error) {
       toast({
         title: 'Error',
@@ -175,7 +181,7 @@ export default function HomePage() {
               <div className="space-y-4">
                 <h2 className="text-xl font-semibold">Preview</h2>
                 <div className="flex justify-center">
-                  <InvoicePreview {...previewData} logoUrl={logoUrl || undefined} />
+                  <InvoicePreview ref={invoicePreviewRef} {...previewData} logoUrl={logoUrl || undefined} />
                 </div>
               </div>
             </div>
