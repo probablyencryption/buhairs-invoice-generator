@@ -28,7 +28,11 @@ export class MemStorage implements IStorage {
 
   async createInvoice(insertInvoice: InsertInvoice): Promise<Invoice> {
     const id = randomUUID();
-    const invoice: Invoice = { ...insertInvoice, id };
+    const invoice: Invoice = { 
+      ...insertInvoice, 
+      id,
+      preCode: insertInvoice.preCode || null,
+    };
     this.invoices.set(id, invoice);
     return invoice;
   }

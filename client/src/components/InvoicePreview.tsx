@@ -77,10 +77,15 @@ export default function InvoicePreview({
         </div>
 
         <div className="text-center pb-4">
-          <div className="text-xl border-t-2 border-b-2 border-black py-2 inline-block px-8">
-            <span className="tracking-widest" style={{ fontFamily: 'Inter, sans-serif' }}>
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <div className="flex-1 border-t-2 border-black"></div>
+            <span className="text-lg tracking-widest px-4" style={{ fontFamily: 'Inter, sans-serif' }}>
               Thank you for shopping with Bu.Hairs!
             </span>
+            <div className="flex-1 border-t-2 border-black"></div>
+          </div>
+          <div className="text-center text-2xl tracking-widest">
+            ************************************************
           </div>
         </div>
       </div>

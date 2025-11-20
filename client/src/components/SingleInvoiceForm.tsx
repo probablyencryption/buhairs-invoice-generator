@@ -8,8 +8,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { CalendarIcon, Upload } from 'lucide-react';
 import { format } from 'date-fns';
-import { invoiceStorage } from '@/lib/invoiceStorage';
 import { cn } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
 
 interface SingleInvoiceFormProps {
   onGenerate: (data: {
@@ -33,10 +33,16 @@ export default function SingleInvoiceForm({ onGenerate, logoUrl, onLogoUpload }:
   const [hasPreCode, setHasPreCode] = useState(false);
   const [preCode, setPreCode] = useState('');
 
+  const { data: invoiceData } = useQuery<{ lastInvoiceNumber: number }>({
+    queryKey: ['/api/settings/invoice-number'],
+  });
+
   useEffect(() => {
-    const nextNumber = invoiceStorage.getNextInvoiceNumber();
-    setInvoiceNumber(nextNumber);
-  }, []);
+    if (invoiceData?.lastInvoiceNumber !== undefined) {
+      const nextNumber = invoiceData.lastInvoiceNumber + 1;
+      setInvoiceNumber(`BLH#${nextNumber}`);
+    }
+  }, [invoiceData]);
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -50,9 +56,9 @@ export default function SingleInvoiceForm({ onGenerate, logoUrl, onLogoUpload }:
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onGenerate({
+    await onGenerate({
       invoiceNumber,
       date: format(date, 'dd/MM/yyyy'),
       customerName,
@@ -61,9 +67,11 @@ export default function SingleInvoiceForm({ onGenerate, logoUrl, onLogoUpload }:
       preCode: hasPreCode ? preCode : undefined,
     });
     
-    invoiceStorage.incrementInvoiceNumber();
-    const nextNumber = invoiceStorage.getNextInvoiceNumber();
-    setInvoiceNumber(nextNumber);
+    if (invoiceData?.lastInvoiceNumber !== undefined) {
+      const nextNumber = invoiceData.lastInvoiceNumber + 2;
+      setInvoiceNumber(`BLH#${nextNumber}`);
+    }
+    
     setCustomerName('');
     setCustomerPhone('');
     setCustomerAddress('');

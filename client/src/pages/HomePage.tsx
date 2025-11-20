@@ -5,13 +5,16 @@ import SingleInvoiceForm from '@/components/SingleInvoiceForm';
 import BulkInvoiceForm from '@/components/BulkInvoiceForm';
 import InvoicePreview from '@/components/InvoicePreview';
 import InvoiceHistory from '@/components/InvoiceHistory';
-import { invoiceStorage, type InvoiceData } from '@/lib/invoiceStorage';
+import PasswordPrompt from '@/components/PasswordPrompt';
+import { type InvoiceData } from '@/lib/invoiceStorage';
 import { useToast } from '@/hooks/use-toast';
 import { FileText, History } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 
 export default function HomePage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeTab, setActiveTab] = useState('single');
-  const [logoUrl, setLogoUrl] = useState<string>();
   const [invoices, setInvoices] = useState<InvoiceData[]>([]);
   const [previewData, setPreviewData] = useState({
     invoiceNumber: 'BLH#2799',
@@ -22,41 +25,76 @@ export default function HomePage() {
     preCode: '' as string | undefined,
   });
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
-    const savedLogo = invoiceStorage.getLogo();
-    if (savedLogo) {
-      setLogoUrl(savedLogo);
-    }
-    setInvoices(invoiceStorage.getAllInvoices());
+    const authenticated = sessionStorage.getItem('bu_authenticated');
+    setIsAuthenticated(authenticated === 'true');
   }, []);
 
+  const { data: logoData } = useQuery<{ logo: string | null }>({
+    queryKey: ['/api/settings/logo'],
+    enabled: isAuthenticated,
+  });
+
+  const logoUrl = logoData?.logo;
+
+  const logoMutation = useMutation({
+    mutationFn: async (dataUrl: string) => {
+      const response = await fetch('/api/settings/logo', {
+        method: 'POST',
+        body: JSON.stringify({ logo: dataUrl }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/settings/logo'] });
+      toast({
+        title: 'Logo uploaded',
+        description: 'Your brand logo has been saved successfully.',
+      });
+    },
+  });
+
   const handleLogoUpload = (dataUrl: string) => {
-    setLogoUrl(dataUrl);
-    invoiceStorage.saveLogo(dataUrl);
-    toast({
-      title: 'Logo uploaded',
-      description: 'Your brand logo has been saved successfully.',
-    });
+    logoMutation.mutate(dataUrl);
   };
 
-  const handleSingleInvoiceGenerate = (data: typeof previewData) => {
-    setPreviewData(data);
+  const handleSingleInvoiceGenerate = async (data: {
+    invoiceNumber: string;
+    date: string;
+    customerName: string;
+    customerPhone: string;
+    customerAddress: string;
+    preCode?: string;
+  }) => {
+    setPreviewData({ ...data, preCode: data.preCode || '' });
     
-    const invoiceData: InvoiceData = {
-      id: Math.random().toString(36).substr(2, 9),
-      ...data,
-    };
-    
-    invoiceStorage.saveInvoice(invoiceData);
-    setInvoices(invoiceStorage.getAllInvoices());
-    
-    toast({
-      title: 'Invoice generated',
-      description: `Invoice ${data.invoiceNumber} has been created and downloaded.`,
-    });
-    
-    console.log('Generate PDF for:', data);
+    try {
+      await fetch('/api/invoices', {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+      await fetch('/api/settings/invoice-number/increment', {
+        method: 'POST',
+      });
+      
+      toast({
+        title: 'Invoice generated',
+        description: `Invoice ${data.invoiceNumber} has been created and downloaded.`,
+      });
+      
+      console.log('Generate PDF for:', data);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to save invoice',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleBulkGenerate = (data: { date: string; rawData: string }) => {
@@ -68,7 +106,7 @@ export default function HomePage() {
   };
 
   const handleViewInvoice = (invoice: InvoiceData) => {
-    setPreviewData(invoice);
+    setPreviewData({ ...invoice, preCode: invoice.preCode || '' });
     setActiveTab('single');
     toast({
       title: 'Invoice loaded',
@@ -84,13 +122,17 @@ export default function HomePage() {
     });
   };
 
+  if (!isAuthenticated) {
+    return <PasswordPrompt onAuthenticated={() => setIsAuthenticated(true)} />;
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {logoUrl && (
+              {logoUrl && logoUrl !== null && (
                 <img src={logoUrl} alt="Bu Luxury Hairs" className="h-12 w-auto" />
               )}
               <div>
@@ -133,7 +175,7 @@ export default function HomePage() {
               <div className="space-y-4">
                 <h2 className="text-xl font-semibold">Preview</h2>
                 <div className="flex justify-center">
-                  <InvoicePreview {...previewData} logoUrl={logoUrl} />
+                  <InvoicePreview {...previewData} logoUrl={logoUrl || undefined} />
                 </div>
               </div>
             </div>
