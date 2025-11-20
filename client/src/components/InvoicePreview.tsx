@@ -30,13 +30,13 @@ export default function InvoicePreview({
       style={{ maxWidth: '700px' }}
       data-testid="invoice-preview"
     >
-      <div className="absolute inset-0 p-8 flex flex-col">
-        <div className="flex justify-between items-start mb-8">
+      <div className="absolute inset-0 p-6 flex flex-col">
+        <div className="flex justify-between items-start mb-6">
           <div className="text-left">
-            <div className="text-xl font-normal tracking-wide" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <div className="text-lg font-normal tracking-wide" style={{ fontFamily: 'Inter, sans-serif' }}>
               INVOICE {invoiceNumber}
             </div>
-            <div className="text-base mt-2" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <div className="text-sm mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>
               DATE: {date}
             </div>
           </div>
@@ -46,7 +46,7 @@ export default function InvoicePreview({
               <img 
                 src={logoUrl} 
                 alt="Bu Luxury Hairs Logo" 
-                className="h-24 w-auto object-contain"
+                className="h-32 w-auto object-contain"
                 data-testid="invoice-logo"
               />
             </div>
@@ -55,13 +55,13 @@ export default function InvoicePreview({
 
         <div className="flex-1 flex flex-col justify-center items-center text-center px-8">
           <h1 
-            className="text-5xl font-bold mb-12 tracking-wider"
-            style={{ fontFamily: 'Inter, sans-serif', letterSpacing: '0.1em' }}
+            className="text-3xl font-bold mb-8 tracking-wider whitespace-nowrap"
+            style={{ fontFamily: 'Inter, sans-serif', letterSpacing: '0.15em' }}
           >
             DELIVERY DETAILS
           </h1>
 
-          <div className="space-y-3 text-2xl" style={{ fontFamily: 'Inter, sans-serif' }}>
+          <div className="space-y-2 text-xl" style={{ fontFamily: 'Inter, sans-serif' }}>
             <div className="font-medium">{customerName}</div>
             <div className="font-normal">{customerPhone}</div>
             {addressLines.map((line, index) => (
@@ -70,21 +70,19 @@ export default function InvoicePreview({
           </div>
 
           {preCode && (
-            <div className="mt-8 text-lg font-normal" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <div className="mt-6 text-base font-normal" style={{ fontFamily: 'Inter, sans-serif' }}>
               PRE Code: {preCode}
             </div>
           )}
         </div>
 
-        <div className="text-center pb-4">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <div className="flex-1 border-t-2 border-black"></div>
-            <span className="text-lg tracking-widest px-4" style={{ fontFamily: 'Inter, sans-serif' }}>
+        <div className="text-center pb-3">
+          <div className="mb-1 whitespace-nowrap">
+            <span className="text-sm tracking-wide px-2" style={{ fontFamily: 'Inter, sans-serif' }}>
               Thank you for shopping with Bu.Hairs!
             </span>
-            <div className="flex-1 border-t-2 border-black"></div>
           </div>
-          <div className="text-center text-2xl tracking-widest">
+          <div className="text-center text-xs tracking-wider overflow-hidden">
             ************************************************
           </div>
         </div>

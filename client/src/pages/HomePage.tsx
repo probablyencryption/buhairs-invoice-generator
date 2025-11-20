@@ -167,7 +167,7 @@ export default function HomePage() {
                 <h2 className="text-xl font-semibold mb-6">Create Invoice</h2>
                 <SingleInvoiceForm
                   onGenerate={handleSingleInvoiceGenerate}
-                  logoUrl={logoUrl}
+                  logoUrl={logoUrl || undefined}
                   onLogoUpload={handleLogoUpload}
                 />
               </Card>
