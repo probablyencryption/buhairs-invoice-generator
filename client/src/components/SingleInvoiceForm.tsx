@@ -6,13 +6,22 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Upload } from 'lucide-react';
+import { CalendarIcon, Upload, Eye, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface SingleInvoiceFormProps {
   onGenerate: (data: {
+    invoiceNumber: string;
+    date: string;
+    customerName: string;
+    customerPhone: string;
+    customerAddress: string;
+    preCode?: string;
+  }, format: 'pdf' | 'jpeg') => void;
+  onPreview: (data: {
     invoiceNumber: string;
     date: string;
     customerName: string;
@@ -24,7 +33,7 @@ interface SingleInvoiceFormProps {
   onLogoUpload: (dataUrl: string) => void;
 }
 
-export default function SingleInvoiceForm({ onGenerate, logoUrl, onLogoUpload }: SingleInvoiceFormProps) {
+export default function SingleInvoiceForm({ onGenerate, onPreview, logoUrl, onLogoUpload }: SingleInvoiceFormProps) {
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [date, setDate] = useState<Date>(new Date());
   const [customerName, setCustomerName] = useState('');
@@ -32,6 +41,7 @@ export default function SingleInvoiceForm({ onGenerate, logoUrl, onLogoUpload }:
   const [customerAddress, setCustomerAddress] = useState('');
   const [hasPreCode, setHasPreCode] = useState(false);
   const [preCode, setPreCode] = useState('');
+  const [downloadFormat, setDownloadFormat] = useState<'pdf' | 'jpeg'>('pdf');
 
   const { data: invoiceData } = useQuery<{ lastInvoiceNumber: number }>({
     queryKey: ['/api/settings/invoice-number'],
@@ -56,21 +66,26 @@ export default function SingleInvoiceForm({ onGenerate, logoUrl, onLogoUpload }:
     }
   };
 
+  const getFormData = () => ({
+    invoiceNumber,
+    date: format(date, 'dd/MM/yyyy'),
+    customerName,
+    customerPhone,
+    customerAddress,
+    preCode: hasPreCode ? preCode : undefined,
+  });
+
+  const handlePreview = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!isFormValid) {
+      return;
+    }
+    onPreview(getFormData());
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onGenerate({
-      invoiceNumber,
-      date: format(date, 'dd/MM/yyyy'),
-      customerName,
-      customerPhone,
-      customerAddress,
-      preCode: hasPreCode ? preCode : undefined,
-    });
-    
-    if (invoiceData?.lastInvoiceNumber !== undefined) {
-      const nextNumber = invoiceData.lastInvoiceNumber + 2;
-      setInvoiceNumber(`BLH#${nextNumber}`);
-    }
+    await onGenerate(getFormData(), downloadFormat);
     
     setCustomerName('');
     setCustomerPhone('');
@@ -78,6 +93,8 @@ export default function SingleInvoiceForm({ onGenerate, logoUrl, onLogoUpload }:
     setPreCode('');
     setHasPreCode(false);
   };
+
+  const isFormValid = customerName && customerPhone && customerAddress && (!hasPreCode || preCode);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6" data-testid="form-single-invoice">
@@ -161,6 +178,7 @@ export default function SingleInvoiceForm({ onGenerate, logoUrl, onLogoUpload }:
             value={preCode}
             onChange={(e) => setPreCode(e.target.value)}
             placeholder="Enter PRE code"
+            required
             data-testid="input-pre-code"
           />
         </div>
@@ -203,9 +221,44 @@ export default function SingleInvoiceForm({ onGenerate, logoUrl, onLogoUpload }:
         />
       </div>
 
-      <Button type="submit" className="w-full" size="lg" data-testid="button-generate-pdf">
-        Generate & Download PDF
-      </Button>
+      <div className="space-y-2">
+        <Label>Download Format</Label>
+        <RadioGroup value={downloadFormat} onValueChange={(value) => setDownloadFormat(value as 'pdf' | 'jpeg')} data-testid="radio-download-format">
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="pdf" id="format-pdf" data-testid="radio-format-pdf" />
+            <Label htmlFor="format-pdf" className="font-normal cursor-pointer">PDF</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="jpeg" id="format-jpeg" data-testid="radio-format-jpeg" />
+            <Label htmlFor="format-jpeg" className="font-normal cursor-pointer">JPEG</Label>
+          </div>
+        </RadioGroup>
+      </div>
+
+      <div className="flex gap-3">
+        <Button 
+          type="button" 
+          variant="outline" 
+          className="flex-1" 
+          size="lg"
+          onClick={handlePreview}
+          disabled={!isFormValid}
+          data-testid="button-preview"
+        >
+          <Eye className="h-4 w-4 mr-2" />
+          Preview
+        </Button>
+        <Button 
+          type="submit" 
+          className="flex-1" 
+          size="lg"
+          disabled={!isFormValid}
+          data-testid="button-generate-download"
+        >
+          <Download className="h-4 w-4 mr-2" />
+          Download {downloadFormat.toUpperCase()}
+        </Button>
+      </div>
     </form>
   );
 }

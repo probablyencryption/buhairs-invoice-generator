@@ -111,9 +111,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertInvoiceSchema.parse(req.body);
       const invoice = await storage.createInvoice(validatedData);
-      res.json(invoice);
+      
+      const setting = await storage.getSetting("last_invoice_number");
+      const currentNumber = setting ? parseInt(setting.value) : 2799;
+      const nextNumber = currentNumber + 1;
+      
+      await storage.setSetting({
+        key: "last_invoice_number",
+        value: nextNumber.toString(),
+      });
+      
+      res.json({ 
+        invoice, 
+        nextInvoiceNumber: `BLH#${nextNumber + 1}` 
+      });
     } catch (error) {
-      res.status(400).json({ error: "Invalid invoice data" });
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          error: "Invalid invoice data", 
+          details: error.errors 
+        });
+      }
+      res.status(500).json({ error: "Failed to create invoice" });
     }
   });
 

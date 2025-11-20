@@ -3,7 +3,8 @@ import jsPDF from 'jspdf';
 
 export async function generateInvoicePDF(
   element: HTMLElement,
-  invoiceNumber: string
+  invoiceNumber: string,
+  format: 'pdf' | 'jpeg' = 'pdf'
 ): Promise<void> {
   const canvas = await html2canvas(element, {
     scale: 3,
@@ -12,17 +13,25 @@ export async function generateInvoicePDF(
     backgroundColor: '#ffffff',
   });
 
-  const imgWidth = 700;
-  const imgHeight = 500;
-  
-  const pdf = new jsPDF({
-    orientation: 'landscape',
-    unit: 'px',
-    format: [imgWidth, imgHeight],
-  });
+  if (format === 'jpeg') {
+    const imgData = canvas.toDataURL('image/jpeg', 1.0);
+    const link = document.createElement('a');
+    link.download = `${invoiceNumber}.jpg`;
+    link.href = imgData;
+    link.click();
+  } else {
+    const imgWidth = 700;
+    const imgHeight = 500;
+    
+    const pdf = new jsPDF({
+      orientation: 'landscape',
+      unit: 'px',
+      format: [imgWidth, imgHeight],
+    });
 
-  const imgData = canvas.toDataURL('image/png');
-  pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+    const imgData = canvas.toDataURL('image/png');
+    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
 
-  pdf.save(`${invoiceNumber}.pdf`);
+    pdf.save(`${invoiceNumber}.pdf`);
+  }
 }

@@ -63,7 +63,7 @@ export default function HomePage() {
     logoMutation.mutate(dataUrl);
   };
 
-  const handleSingleInvoiceGenerate = async (data: {
+  const handlePreview = (data: {
     invoiceNumber: string;
     date: string;
     customerName: string;
@@ -72,32 +72,68 @@ export default function HomePage() {
     preCode?: string;
   }) => {
     setPreviewData({ ...data, preCode: data.preCode || '' });
+  };
+
+  const handleSingleInvoiceGenerate = async (
+    data: {
+      invoiceNumber: string;
+      date: string;
+      customerName: string;
+      customerPhone: string;
+      customerAddress: string;
+      preCode?: string;
+    },
+    format: 'pdf' | 'jpeg'
+  ) => {
+    setPreviewData({ ...data, preCode: data.preCode || '' });
+    
+    if (!invoicePreviewRef.current) {
+      toast({
+        title: 'Error',
+        description: 'Invoice preview not ready. Please try again.',
+        variant: 'destructive',
+      });
+      return;
+    }
     
     try {
-      await fetch('/api/invoices', {
+      const invoiceResponse = await fetch('/api/invoices', {
         method: 'POST',
         body: JSON.stringify(data),
         headers: { 'Content-Type': 'application/json' },
       });
+
+      if (!invoiceResponse.ok) {
+        const errorData = await invoiceResponse.json();
+        throw new Error(errorData.error || 'Failed to save invoice');
+      }
       
-      await fetch('/api/settings/invoice-number/increment', {
-        method: 'POST',
-      });
+      const responseData = await invoiceResponse.json();
+      
+      await queryClient.invalidateQueries({ queryKey: ['/api/settings/invoice-number'] });
       
       setTimeout(async () => {
         if (invoicePreviewRef.current) {
-          await generateInvoicePDF(invoicePreviewRef.current, data.invoiceNumber);
+          try {
+            await generateInvoicePDF(invoicePreviewRef.current, data.invoiceNumber, format);
+            toast({
+              title: 'Invoice generated',
+              description: `Invoice ${data.invoiceNumber} has been downloaded as ${format.toUpperCase()}.`,
+            });
+          } catch (error) {
+            toast({
+              title: 'Download failed',
+              description: 'Failed to generate the download file',
+              variant: 'destructive',
+            });
+          }
         }
       }, 100);
-      
-      toast({
-        title: 'Invoice generated',
-        description: `Invoice ${data.invoiceNumber} has been created and downloaded.`,
-      });
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to save invoice';
       toast({
         title: 'Error',
-        description: 'Failed to save invoice',
+        description: message,
         variant: 'destructive',
       });
     }
@@ -173,6 +209,7 @@ export default function HomePage() {
                 <h2 className="text-xl font-semibold mb-6">Create Invoice</h2>
                 <SingleInvoiceForm
                   onGenerate={handleSingleInvoiceGenerate}
+                  onPreview={handlePreview}
                   logoUrl={logoUrl || undefined}
                   onLogoUpload={handleLogoUpload}
                 />
