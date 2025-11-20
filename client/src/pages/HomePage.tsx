@@ -16,7 +16,6 @@ import { generateInvoicePDF } from '@/lib/pdfGenerator';
 export default function HomePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeTab, setActiveTab] = useState('single');
-  const [invoices, setInvoices] = useState<InvoiceData[]>([]);
   const [previewData, setPreviewData] = useState({
     invoiceNumber: 'BLH#2799',
     date: new Date().toLocaleDateString('en-GB'),
@@ -39,15 +38,17 @@ export default function HomePage() {
     enabled: isAuthenticated,
   });
 
+  const { data: invoicesData } = useQuery<InvoiceData[]>({
+    queryKey: ['/api/invoices'],
+    enabled: isAuthenticated,
+  });
+
+  const invoices = invoicesData || [];
   const logoUrl = logoData?.logo;
 
   const logoMutation = useMutation({
     mutationFn: async (dataUrl: string) => {
-      const response = await fetch('/api/settings/logo', {
-        method: 'POST',
-        body: JSON.stringify({ logo: dataUrl }),
-        headers: { 'Content-Type': 'application/json' },
-      });
+      const response = await apiRequest('POST', '/api/settings/logo', { logo: dataUrl });
       return response.json();
     },
     onSuccess: () => {
@@ -97,20 +98,11 @@ export default function HomePage() {
     }
     
     try {
-      const invoiceResponse = await fetch('/api/invoices', {
-        method: 'POST',
-        body: JSON.stringify(data),
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      if (!invoiceResponse.ok) {
-        const errorData = await invoiceResponse.json();
-        throw new Error(errorData.error || 'Failed to save invoice');
-      }
-      
+      const invoiceResponse = await apiRequest('POST', '/api/invoices', data);
       const responseData = await invoiceResponse.json();
       
       await queryClient.invalidateQueries({ queryKey: ['/api/settings/invoice-number'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/invoices'] });
       
       setTimeout(async () => {
         if (invoicePreviewRef.current) {

@@ -29,8 +29,9 @@ export default function PasswordPrompt({ onAuthenticated }: PasswordPromptProps)
 
       const data = await response.json();
 
-      if (data.success) {
+      if (data.success && data.token) {
         sessionStorage.setItem('bu_authenticated', 'true');
+        sessionStorage.setItem('bu_session', data.token);
         onAuthenticated();
       } else {
         setError('Invalid password. Please try again.');

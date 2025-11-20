@@ -1,10 +1,30 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
 import { insertSettingSchema, insertInvoiceSchema } from "@shared/schema";
 import fs from "fs";
 import path from "path";
+
+async function requireAuth(req: Request, res: Response, next: NextFunction) {
+  const sessionToken = req.headers['x-app-session'];
+  
+  if (!sessionToken) {
+    return res.status(401).json({ error: 'Unauthorized - no session' });
+  }
+  
+  try {
+    const activeSession = await storage.getSetting("active_session");
+    
+    if (activeSession && sessionToken === activeSession.value) {
+      return next();
+    }
+    
+    return res.status(401).json({ error: 'Unauthorized - invalid session' });
+  } catch (error) {
+    return res.status(500).json({ error: 'Server error' });
+  }
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
@@ -20,12 +40,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         
         if (password === defaultPassword.value) {
-          return res.json({ success: true });
+          const sessionToken = `bu_session_${Date.now()}_${Math.random().toString(36)}`;
+          await storage.setSetting({
+            key: "active_session",
+            value: sessionToken,
+          });
+          return res.json({ success: true, token: sessionToken });
         }
       }
       
       if (passwordSetting && password === passwordSetting.value) {
-        return res.json({ success: true });
+        const sessionToken = `bu_session_${Date.now()}_${Math.random().toString(36)}`;
+        await storage.setSetting({
+          key: "active_session",
+          value: sessionToken,
+        });
+        return res.json({ success: true, token: sessionToken });
       }
       
       res.status(401).json({ success: false, message: "Invalid password" });
@@ -59,7 +89,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/settings/logo", async (req, res) => {
+  app.post("/api/settings/logo", requireAuth, async (req, res) => {
     try {
       const { logo } = req.body;
       const logoSetting = await storage.setSetting({
@@ -72,7 +102,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/settings/invoice-number", async (req, res) => {
+  app.get("/api/settings/invoice-number", requireAuth, async (req, res) => {
     try {
       const setting = await storage.getSetting("last_invoice_number");
       
@@ -90,7 +120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/settings/invoice-number/increment", async (req, res) => {
+  app.post("/api/settings/invoice-number/increment", requireAuth, async (req, res) => {
     try {
       const setting = await storage.getSetting("last_invoice_number");
       const currentNumber = setting ? parseInt(setting.value) : 2799;
@@ -107,7 +137,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/invoices", async (req, res) => {
+  app.post("/api/invoices", requireAuth, async (req, res) => {
     try {
       const validatedData = insertInvoiceSchema.parse(req.body);
       const invoice = await storage.createInvoice(validatedData);
@@ -123,7 +153,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({ 
         invoice, 
-        nextInvoiceNumber: `BLH#${nextNumber + 1}` 
+        nextInvoiceNumber: `BLH#${nextNumber}`
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -136,7 +166,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/invoices", async (req, res) => {
+  app.get("/api/invoices", requireAuth, async (req, res) => {
     try {
       const invoices = await storage.getAllInvoices();
       res.json(invoices);

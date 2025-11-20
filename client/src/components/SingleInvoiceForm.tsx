@@ -209,16 +209,33 @@ export default function SingleInvoiceForm({ onGenerate, onPreview, logoUrl, onLo
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="customerAddress">Delivery Address</Label>
+        <div className="flex justify-between items-center">
+          <Label htmlFor="customerAddress">Delivery Address</Label>
+          <span className={cn(
+            "text-xs",
+            customerAddress.length > 120 ? "text-destructive font-medium" : "text-muted-foreground"
+          )}>
+            {customerAddress.length}/120
+          </span>
+        </div>
         <Textarea
           id="customerAddress"
           value={customerAddress}
-          onChange={(e) => setCustomerAddress(e.target.value)}
+          onChange={(e) => {
+            if (e.target.value.length <= 120) {
+              setCustomerAddress(e.target.value);
+            }
+          }}
           placeholder="Full delivery address"
           required
           rows={3}
           data-testid="textarea-customer-address"
         />
+        {customerAddress.length > 90 && (
+          <p className="text-xs text-muted-foreground">
+            {120 - customerAddress.length} characters remaining
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">
