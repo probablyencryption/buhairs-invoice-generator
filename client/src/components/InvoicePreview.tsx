@@ -30,13 +30,13 @@ export default function InvoicePreview({
       style={{ maxWidth: '700px' }}
       data-testid="invoice-preview"
     >
-      <div className="absolute inset-0 p-5 flex flex-col">
-        <div className="flex justify-between items-center mb-3">
+      <div className="absolute inset-0 p-6 flex flex-col">
+        <div className="flex justify-between items-start mb-2">
           <div className="text-left">
-            <div className="text-base font-normal tracking-wide" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <div className="text-lg font-normal tracking-wide" style={{ fontFamily: 'Inter, sans-serif' }}>
               INVOICE {invoiceNumber}
             </div>
-            <div className="text-sm mt-0.5" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <div className="text-sm mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>
               DATE: {date}
             </div>
           </div>
@@ -46,16 +46,16 @@ export default function InvoicePreview({
               <img 
                 src={logoUrl} 
                 alt="Bu Luxury Hairs Logo" 
-                className="h-20 w-auto object-contain"
+                className="h-40 w-auto object-contain"
                 data-testid="invoice-logo"
               />
             </div>
           )}
         </div>
 
-        <div className="flex-1 flex flex-col items-center text-center px-8 pt-4">
+        <div className="flex-1 flex flex-col items-center text-center px-8">
           <h1 
-            className="text-2xl font-bold mb-8 tracking-wider whitespace-nowrap"
+            className="text-3xl font-bold mb-8 tracking-wider whitespace-nowrap"
             style={{ fontFamily: 'Inter, sans-serif', letterSpacing: '0.15em' }}
           >
             DELIVERY DETAILS
@@ -76,14 +76,14 @@ export default function InvoicePreview({
           )}
         </div>
 
-        <div className="text-center pb-2 mt-auto">
-          <div className="mb-0.5 whitespace-nowrap">
+        <div className="text-center pb-3 mt-auto">
+          <div className="text-center text-sm tracking-wider overflow-hidden mb-1">
+            ************************************************
+          </div>
+          <div className="whitespace-nowrap">
             <span className="text-sm tracking-wide px-2" style={{ fontFamily: 'Inter, sans-serif' }}>
               Thank you for shopping with Bu.Hairs!
             </span>
-          </div>
-          <div className="text-center text-xs tracking-wider overflow-hidden">
-            ************************************************
           </div>
         </div>
       </div>
