@@ -12,6 +12,7 @@ import { FileText, History } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { generateInvoicePDF } from '@/lib/pdfGenerator';
+import { useLocation } from 'wouter';
 
 export default function HomePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -27,6 +28,7 @@ export default function HomePage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const invoicePreviewRef = useRef<HTMLDivElement>(null);
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     const validateSession = async () => {
@@ -166,7 +168,7 @@ export default function HomePage() {
 
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
 
-  const handleBulkGenerate = async (data: { date: string; rawData: string; includePre: boolean }) => {
+  const handleBulkGenerate = async (data: { date: string; rawData: string; includePre: boolean; format: 'pdf' | 'jpeg' }) => {
     setIsBulkProcessing(true);
     
     try {
@@ -179,6 +181,7 @@ export default function HomePage() {
         rawData: data.rawData,
         includePre: data.includePre,
         date: data.date,
+        format: data.format,
       });
 
       const result = await response.json();
@@ -215,64 +218,25 @@ export default function HomePage() {
         return;
       }
 
-      toast({
-        title: `Generating PDFs...`,
-        description: `Creating ${successfulInvoices.length} PDF files...`,
-      });
-
+      // Invalidate queries to refresh invoice history
       await queryClient.invalidateQueries({ queryKey: ['/api/settings/invoice-number'] });
       await queryClient.invalidateQueries({ queryKey: ['/api/invoices'] });
 
-      let pdfSuccessCount = 0;
-      const pdfFailures: string[] = [];
+      // Store results in sessionStorage and navigate to results page
+      sessionStorage.setItem('bulk_results', JSON.stringify({
+        invoices: successfulInvoices,
+        format: data.format,
+        logo: logoUrl || undefined,
+      }));
 
-      for (const invoice of successfulInvoices) {
-        const invoiceData = {
-          invoiceNumber: invoice.invoiceNumber,
-          date: invoice.date,
-          customerName: invoice.customerName,
-          customerPhone: invoice.customerPhone,
-          customerAddress: invoice.customerAddress,
-          preCode: invoice.preCode || undefined,
-        };
+      toast({
+        title: 'Success!',
+        description: `${successfulInvoices.length} invoice${successfulInvoices.length !== 1 ? 's' : ''} created successfully`,
+      });
 
-        setPreviewData(invoiceData);
+      // Navigate to results page
+      setLocation('/bulk-results');
 
-        await new Promise(resolve => requestAnimationFrame(() => {
-          requestAnimationFrame(resolve);
-        }));
-
-        if (invoicePreviewRef.current) {
-          try {
-            await generateInvoicePDF(invoicePreviewRef.current, invoice.invoiceNumber, 'pdf');
-            pdfSuccessCount++;
-          } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            console.error(`Failed to generate PDF for ${invoice.invoiceNumber}:`, error);
-            pdfFailures.push(invoice.invoiceNumber);
-            toast({
-              title: `PDF generation failed`,
-              description: `Failed to generate PDF for invoice ${invoice.invoiceNumber}: ${errorMessage}`,
-              variant: 'destructive',
-            });
-          }
-        }
-      }
-
-      if (pdfSuccessCount > 0) {
-        toast({
-          title: 'Success!',
-          description: `Generated ${pdfSuccessCount} PDFs successfully${pdfFailures.length > 0 ? `. Failed: ${pdfFailures.join(', ')}` : ''}.`,
-        });
-      } else if (pdfFailures.length > 0) {
-        toast({
-          title: 'All PDFs failed',
-          description: `Failed to generate PDFs for: ${pdfFailures.join(', ')}`,
-          variant: 'destructive',
-        });
-      }
-
-      setIsBulkProcessing(false);
     } catch (error: any) {
       console.error('Bulk generation error:', error);
       toast({

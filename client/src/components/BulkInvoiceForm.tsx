@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 
 interface BulkInvoiceFormProps {
-  onGenerate: (data: { date: string; rawData: string; includePre: boolean }) => void;
+  onGenerate: (data: { date: string; rawData: string; includePre: boolean; format: 'pdf' | 'jpeg' }) => void;
   isProcessing?: boolean;
 }
 
@@ -19,13 +19,29 @@ export default function BulkInvoiceForm({ onGenerate, isProcessing = false }: Bu
   const [date, setDate] = useState<Date>(new Date());
   const [rawData, setRawData] = useState('');
   const [includePre, setIncludePre] = useState(false);
+  const [validationError, setValidationError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const validateAndGenerate = (formatType: 'pdf' | 'jpeg') => {
+    setValidationError('');
+    
+    // Count number of lines (customers)
+    const lines = rawData.trim().split('\n').filter(line => line.trim() !== '');
+    
+    if (lines.length === 0) {
+      setValidationError('Please enter at least one customer');
+      return;
+    }
+    
+    if (lines.length > 20) {
+      setValidationError('Maximum 20 customers allowed per bulk upload');
+      return;
+    }
+    
     onGenerate({
       date: format(date, 'dd/MM/yyyy'),
       rawData,
       includePre,
+      format: formatType,
     });
   };
 
@@ -39,21 +55,24 @@ export default function BulkInvoiceForm({ onGenerate, isProcessing = false }: Bu
         <code className="text-sm bg-background p-3 rounded-md block">
           {includePre ? (
             <>
-              Name, Phone Number, Address, PRE Code<br/>
-              John Doe, 08012345678, 123 Main Street Lagos, 7812344<br/>
-              Jane Smith, 09087654321, 456 Park Avenue Abuja, 7923456
+              Name : Phone Number : Address : PRE Code<br/>
+              John Doe : 08012345678 : 123 Main Street, Lagos : 7812344<br/>
+              Jane Smith : 09087654321 : 456 Park Avenue, Abuja : 7923456
             </>
           ) : (
             <>
-              Name, Phone Number, Address<br/>
-              John Doe, 08012345678, 123 Main Street Lagos<br/>
-              Jane Smith, 09087654321, 456 Park Avenue Abuja
+              Name : Phone Number : Address<br/>
+              John Doe : 08012345678 : 123 Main Street, Lagos<br/>
+              Jane Smith : 09087654321 : 456 Park Avenue, Abuja
             </>
           )}
         </code>
+        <p className="text-xs text-muted-foreground mt-2">
+          Maximum 20 customers per upload
+        </p>
       </Card>
 
-      <form onSubmit={handleSubmit} className="space-y-6" data-testid="form-bulk-invoice">
+      <div className="space-y-6" data-testid="form-bulk-invoice">
         <div className="space-y-2">
           <Label>Invoice Date (for all invoices)</Label>
           <Popover>
@@ -112,23 +131,49 @@ export default function BulkInvoiceForm({ onGenerate, isProcessing = false }: Bu
           />
         </div>
 
-        <Button 
-          type="submit" 
-          className="w-full" 
-          size="lg" 
-          disabled={isProcessing}
-          data-testid="button-process-bulk"
-        >
-          {isProcessing ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Processing with AI...
-            </>
-          ) : (
-            'Process & Generate Invoices'
-          )}
-        </Button>
-      </form>
+        {validationError && (
+          <div className="p-3 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+            {validationError}
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-4">
+          <Button 
+            onClick={() => validateAndGenerate('pdf')}
+            className="w-full" 
+            size="lg" 
+            disabled={isProcessing}
+            data-testid="button-process-bulk-pdf"
+          >
+            {isProcessing ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              'Process & Generate (PDF)'
+            )}
+          </Button>
+
+          <Button 
+            onClick={() => validateAndGenerate('jpeg')}
+            className="w-full" 
+            size="lg" 
+            variant="outline"
+            disabled={isProcessing}
+            data-testid="button-process-bulk-jpeg"
+          >
+            {isProcessing ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              'Process & Generate (JPEG)'
+            )}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

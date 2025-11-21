@@ -182,7 +182,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/invoices/bulk-process", requireAuth, async (req, res) => {
     try {
-      const { rawData, includePre, date } = req.body;
+      const { rawData, includePre, date, format } = req.body;
 
       if (!rawData || typeof rawData !== 'string') {
         return res.status(400).json({ error: "Invalid customer data" });
@@ -190,6 +190,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!date || typeof date !== 'string') {
         return res.status(400).json({ error: "Invalid date" });
+      }
+
+      if (!format || (format !== 'pdf' && format !== 'jpeg')) {
+        return res.status(400).json({ error: "Invalid format. Must be 'pdf' or 'jpeg'" });
+      }
+
+      // Validate maximum 20 customers
+      const lines = rawData.trim().split('\n').filter(line => line.trim() !== '');
+      if (lines.length > 20) {
+        return res.status(400).json({ error: "Maximum 20 customers allowed per bulk upload" });
+      }
+
+      if (lines.length === 0) {
+        return res.status(400).json({ error: "No customer data provided" });
       }
 
       if (!process.env.OPENAI_API_KEY) {
@@ -201,12 +215,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const systemPrompt = includePre
-        ? `You are a data extraction assistant. Extract customer information from the provided text and return it as a JSON array. Each customer should have: name, phone, address, and preCode (7-digit number only, no 'PRE' prefix). If a PRE code is not exactly 7 digits, set it to null. Return ONLY valid JSON array, no markdown formatting.`
-        : `You are a data extraction assistant. Extract customer information from the provided text and return it as a JSON array. Each customer should have: name, phone, and address. Return ONLY valid JSON array, no markdown formatting.`;
+        ? `You are a data extraction assistant. Extract customer information from the provided text and return it as a JSON array. Each customer should have: name, phone, address, and preCode (7-digit number only, no 'PRE' prefix). If a PRE code is not exactly 7 digits, set it to null. The data is separated by colons (:). Return ONLY valid JSON array, no markdown formatting.`
+        : `You are a data extraction assistant. Extract customer information from the provided text and return it as a JSON array. Each customer should have: name, phone, and address. The data is separated by colons (:). Return ONLY valid JSON array, no markdown formatting.`;
 
       const userPrompt = includePre
-        ? `Extract customer data from this text. Each line contains: Name, Phone, Address, PRE Code (7 digits). Return as JSON array with fields: name, phone, address, preCode.\n\n${rawData}`
-        : `Extract customer data from this text. Each line contains: Name, Phone, Address. Return as JSON array with fields: name, phone, address.\n\n${rawData}`;
+        ? `Extract customer data from this text. Each line is separated by colons and contains: Name : Phone : Address : PRE Code (7 digits). Return as JSON array with fields: name, phone, address, preCode.\n\n${rawData}`
+        : `Extract customer data from this text. Each line is separated by colons and contains: Name : Phone : Address. Return as JSON array with fields: name, phone, address.\n\n${rawData}`;
 
       const completion = await openai.chat.completions.create({
         model: "gpt-4o-mini",
