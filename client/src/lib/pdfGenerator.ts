@@ -20,8 +20,8 @@ export async function generateInvoicePDF(
     link.href = imgData;
     link.click();
   } else {
-    const imgWidth = 700;
-    const imgHeight = 500;
+    const imgWidth = 70;
+    const imgHeight = 50;
     
     const pdf = new jsPDF({
       orientation: 'landscape',
