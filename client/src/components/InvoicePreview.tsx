@@ -26,8 +26,8 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
   return (
     <div 
       ref={ref}
-      className="relative bg-white w-full aspect-[7/5] border-2 border-muted shadow-lg rounded-md overflow-hidden"
-      style={{ maxWidth: '700px' }}
+      className="relative bg-white border-2 border-muted shadow-lg rounded-md overflow-hidden"
+      style={{ width: '1414px', height: '1007px' }}
       data-testid="invoice-preview"
     >
       <div className="absolute inset-0 px-6 pt-2 pb-6 flex flex-col">
