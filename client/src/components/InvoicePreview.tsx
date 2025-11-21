@@ -30,7 +30,7 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
       style={{ maxWidth: '700px' }}
       data-testid="invoice-preview"
     >
-      <div className="absolute inset-0 p-6 flex flex-col">
+      <div className="absolute inset-0 px-6 pt-2 pb-6 flex flex-col">
         <div className="flex justify-between items-center mb-4">
           <div className="text-left">
             <div className="text-sm font-normal tracking-wide" style={{ fontFamily: 'Inter, sans-serif' }}>
