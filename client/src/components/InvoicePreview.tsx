@@ -27,16 +27,16 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
     <div 
       ref={ref}
       className="relative bg-white border-2 border-muted shadow-lg rounded-md overflow-hidden"
-      style={{ width: '1414px', height: '1007px' }}
+      style={{ width: '827px', height: '591px' }}
       data-testid="invoice-preview"
     >
-      <div className="absolute inset-0 px-6 pt-2 pb-6 flex flex-col">
-        <div className="flex justify-between items-center mb-2">
+      <div className="absolute inset-0 px-3 pt-1 pb-3 flex flex-col">
+        <div className="flex justify-between items-center mb-1">
           <div className="text-left">
-            <div className="text-sm font-normal tracking-wide" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <div className="text-xs font-normal tracking-wide" style={{ fontFamily: 'Inter, sans-serif' }}>
               INVOICE {invoiceNumber}
             </div>
-            <div className="text-sm mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <div className="text-xs mt-0.5" style={{ fontFamily: 'Inter, sans-serif' }}>
               DATE: {date}
             </div>
           </div>
@@ -46,22 +46,22 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
               <img 
                 src={logoUrl} 
                 alt="Bu Luxury Hairs Logo" 
-                className="h-44 w-auto object-contain"
+                className="h-20 w-auto object-contain"
                 data-testid="invoice-logo"
               />
             </div>
           )}
         </div>
 
-        <div className="flex-1 flex flex-col items-center px-8 overflow-hidden">
+        <div className="flex-1 flex flex-col items-center px-4 overflow-hidden">
           <h1 
-            className="text-2xl font-bold mb-4 tracking-wider whitespace-nowrap text-center"
+            className="text-base font-bold mb-2 tracking-wider whitespace-nowrap text-center"
             style={{ fontFamily: 'Inter, sans-serif', letterSpacing: '0.15em' }}
           >
             DELIVERY DETAILS
           </h1>
 
-          <div className="space-y-2 text-xl text-center" style={{ fontFamily: 'Inter, sans-serif' }}>
+          <div className="space-y-1 text-sm text-center" style={{ fontFamily: 'Inter, sans-serif' }}>
             <div className="font-medium">{customerName}</div>
             <div className="font-normal">{customerPhone}</div>
             {addressLines.map((line, index) => (
@@ -70,18 +70,18 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
           </div>
           
           {preCode && (
-            <div className="mt-4 text-2xl font-bold text-left w-full pl-8" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <div className="mt-2 text-base font-bold text-left w-full pl-4" style={{ fontFamily: 'Inter, sans-serif' }}>
               PRE{preCode}
             </div>
           )}
         </div>
 
-        <div className="text-center pb-3">
-          <div className="text-center text-sm tracking-wider overflow-hidden mb-1">
+        <div className="text-center pb-2">
+          <div className="text-center text-xs tracking-wider overflow-hidden mb-0.5">
             ************************************************
           </div>
           <div className="whitespace-nowrap">
-            <span className="text-sm tracking-wide px-2" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <span className="text-xs tracking-wide px-1" style={{ fontFamily: 'Inter, sans-serif' }}>
               Thank you for shopping with Bu.Hairs!
             </span>
           </div>
