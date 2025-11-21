@@ -4,25 +4,28 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Switch } from '@/components/ui/switch';
 import { CalendarIcon, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 
 interface BulkInvoiceFormProps {
-  onGenerate: (data: { date: string; rawData: string }) => void;
+  onGenerate: (data: { date: string; rawData: string; includePre: boolean }) => void;
   isProcessing?: boolean;
 }
 
 export default function BulkInvoiceForm({ onGenerate, isProcessing = false }: BulkInvoiceFormProps) {
   const [date, setDate] = useState<Date>(new Date());
   const [rawData, setRawData] = useState('');
+  const [includePre, setIncludePre] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onGenerate({
       date: format(date, 'dd/MM/yyyy'),
       rawData,
+      includePre,
     });
   };
 
@@ -34,9 +37,19 @@ export default function BulkInvoiceForm({ onGenerate, isProcessing = false }: Bu
           Paste customer data in the following format (one customer per line):
         </p>
         <code className="text-sm bg-background p-3 rounded-md block">
-          Name, Phone Number, Address<br/>
-          John Doe, 08012345678, 123 Main Street Lagos<br/>
-          Jane Smith, 09087654321, 456 Park Avenue Abuja
+          {includePre ? (
+            <>
+              Name, Phone Number, Address, PRE Code<br/>
+              John Doe, 08012345678, 123 Main Street Lagos, 7812344<br/>
+              Jane Smith, 09087654321, 456 Park Avenue Abuja, 7923456
+            </>
+          ) : (
+            <>
+              Name, Phone Number, Address<br/>
+              John Doe, 08012345678, 123 Main Street Lagos<br/>
+              Jane Smith, 09087654321, 456 Park Avenue Abuja
+            </>
+          )}
         </code>
       </Card>
 
@@ -66,6 +79,23 @@ export default function BulkInvoiceForm({ onGenerate, isProcessing = false }: Bu
               />
             </PopoverContent>
           </Popover>
+        </div>
+
+        <div className="flex items-center justify-between p-4 rounded-lg border bg-card">
+          <div className="space-y-0.5">
+            <Label htmlFor="include-pre" className="text-base font-medium">
+              Include PRE Code
+            </Label>
+            <p className="text-sm text-muted-foreground">
+              Extract PRE codes from customer data
+            </p>
+          </div>
+          <Switch
+            id="include-pre"
+            checked={includePre}
+            onCheckedChange={setIncludePre}
+            data-testid="switch-include-pre"
+          />
         </div>
 
         <div className="space-y-2">
