@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -19,24 +20,41 @@ function Router() {
 
 function BulkResultsPageWrapper() {
   const [, setLocation] = useLocation();
-  const bulkResultsData = sessionStorage.getItem('bulk_results');
+  const [data, setData] = useState<{ invoices: any[]; format: 'pdf' | 'jpeg'; logo?: string } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
-  if (!bulkResultsData) {
-    setLocation('/');
+  useEffect(() => {
+    const bulkResultsData = sessionStorage.getItem('bulk_results');
+    
+    if (!bulkResultsData) {
+      setLocation('/');
+      setIsLoading(false);
+      return;
+    }
+    
+    try {
+      const parsedData = JSON.parse(bulkResultsData);
+      setData(parsedData);
+      // Clear sessionStorage after successfully loading the data
+      sessionStorage.removeItem('bulk_results');
+    } catch (error) {
+      console.error('Failed to parse bulk results:', error);
+      sessionStorage.removeItem('bulk_results');
+      setLocation('/');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [setLocation]);
+  
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  }
+  
+  if (!data) {
     return null;
   }
   
-  try {
-    const data = JSON.parse(bulkResultsData);
-    // Clear the session storage after consuming the data to prevent stale data
-    sessionStorage.removeItem('bulk_results');
-    return <BulkResultsPage invoices={data.invoices} format={data.format} logo={data.logo} />;
-  } catch (error) {
-    console.error('Failed to parse bulk results:', error);
-    sessionStorage.removeItem('bulk_results');
-    setLocation('/');
-    return null;
-  }
+  return <BulkResultsPage invoices={data.invoices} format={data.format} logo={data.logo} />;
 }
 
 function App() {

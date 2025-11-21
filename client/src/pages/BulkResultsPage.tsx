@@ -35,16 +35,19 @@ export default function BulkResultsPage({ invoices, format, logo }: BulkResultsP
   const { toast } = useToast();
 
   const handleDownload = async (invoice: InvoiceData) => {
-    if (!invoiceRef.current) return;
-
     setIsGenerating(true);
-    try {
-      // Temporarily set the invoice data for generation
-      setPreviewInvoice(invoice);
-      
-      // Wait for DOM to update
-      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    setPreviewInvoice(invoice);
+    
+    // Wait for DOM to update and render the hidden invoice
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
+    try {
+      if (!invoiceRef.current) {
+        console.error('Invoice preview failed to render - ref is null after DOM update');
+        throw new Error('Invoice preview failed to render');
+      }
+
+      // Generate PDF before clearing state
       await generateInvoicePDF(invoiceRef.current, invoice.invoiceNumber, format);
 
       toast({
@@ -52,12 +55,14 @@ export default function BulkResultsPage({ invoices, format, logo }: BulkResultsP
         description: `Invoice ${invoice.invoiceNumber} downloaded as ${format.toUpperCase()}`,
       });
     } catch (error) {
+      console.error('Download error:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
         description: `Failed to generate ${format.toUpperCase()}: ${error instanceof Error ? error.message : 'Unknown error'}`,
       });
     } finally {
+      // Only clear state after PDF generation completes (success or failure)
       setIsGenerating(false);
       setPreviewInvoice(null);
     }

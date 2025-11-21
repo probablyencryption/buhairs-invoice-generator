@@ -223,11 +223,13 @@ export default function HomePage() {
       await queryClient.invalidateQueries({ queryKey: ['/api/invoices'] });
 
       // Store results in sessionStorage and navigate to results page
-      sessionStorage.setItem('bulk_results', JSON.stringify({
+      const bulkResultsData = {
         invoices: successfulInvoices,
         format: data.format,
-        logo: logoUrl || undefined,
-      }));
+        logo: logoUrl || null,
+      };
+      
+      sessionStorage.setItem('bulk_results', JSON.stringify(bulkResultsData));
 
       toast({
         title: 'Success!',
