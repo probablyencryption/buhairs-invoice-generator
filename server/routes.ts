@@ -5,6 +5,7 @@ import { z } from "zod";
 import { insertSettingSchema, insertInvoiceSchema } from "@shared/schema";
 import fs from "fs";
 import path from "path";
+import OpenAI from "openai";
 
 async function requireAuth(req: Request, res: Response, next: NextFunction) {
   const sessionToken = req.headers['x-app-session'];
@@ -176,6 +177,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(invoices);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch invoices" });
+    }
+  });
+
+  app.post("/api/invoices/bulk-process", requireAuth, async (req, res) => {
+    try {
+      const { rawData, includePre } = req.body;
+
+      if (!rawData || typeof rawData !== 'string') {
+        return res.status(400).json({ error: "Invalid customer data" });
+      }
+
+      if (!process.env.OPENAI_API_KEY) {
+        return res.status(500).json({ error: "OpenAI API key not configured" });
+      }
+
+      const openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
+
+      const systemPrompt = includePre
+        ? `You are a data extraction assistant. Extract customer information from the provided text and return it as a JSON array. Each customer should have: name, phone, address, and preCode (7-digit number only, no 'PRE' prefix). If a PRE code is not exactly 7 digits, set it to null. Return ONLY valid JSON array, no markdown formatting.`
+        : `You are a data extraction assistant. Extract customer information from the provided text and return it as a JSON array. Each customer should have: name, phone, and address. Return ONLY valid JSON array, no markdown formatting.`;
+
+      const userPrompt = includePre
+        ? `Extract customer data from this text. Each line contains: Name, Phone, Address, PRE Code (7 digits). Return as JSON array with fields: name, phone, address, preCode.\n\n${rawData}`
+        : `Extract customer data from this text. Each line contains: Name, Phone, Address. Return as JSON array with fields: name, phone, address.\n\n${rawData}`;
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt }
+        ],
+        temperature: 0.1,
+      });
+
+      const responseText = completion.choices[0]?.message?.content?.trim() || '';
+      
+      let parsedData: Array<{
+        name: string;
+        phone: string;
+        address: string;
+        preCode?: string;
+      }> = [];
+
+      try {
+        const cleanedResponse = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        parsedData = JSON.parse(cleanedResponse);
+        
+        if (!Array.isArray(parsedData)) {
+          throw new Error('Response is not an array');
+        }
+
+        parsedData = parsedData.map(customer => {
+          const cleaned: any = {
+            name: customer.name?.trim() || '',
+            phone: customer.phone?.trim() || '',
+            address: customer.address?.trim() || '',
+          };
+
+          if (includePre && customer.preCode) {
+            const preCodeStr = customer.preCode.toString().replace(/\D/g, '');
+            if (preCodeStr.length === 7) {
+              cleaned.preCode = preCodeStr;
+            }
+          }
+
+          return cleaned;
+        });
+
+      } catch (parseError) {
+        console.error('Failed to parse OpenAI response:', responseText);
+        return res.status(500).json({ 
+          error: "Failed to parse customer data from AI response",
+          details: responseText 
+        });
+      }
+
+      res.json({ customers: parsedData });
+    } catch (error: any) {
+      console.error('Bulk processing error:', error);
+      res.status(500).json({ 
+        error: "Failed to process bulk data",
+        message: error.message 
+      });
     }
   });
 
