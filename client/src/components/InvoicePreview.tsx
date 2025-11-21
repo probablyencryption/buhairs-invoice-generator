@@ -70,13 +70,13 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
         
         {/* Logo - Top Right */}
         {logoUrl && (
-          <div style={{ flexShrink: 0 }}>
+          <div style={{ flexShrink: 0, marginTop: '-14px' }}>
             <img 
               src={logoUrl} 
               alt="Bu Luxury Hairs Logo" 
               style={{ 
                 height: '170px',
-                width: '170px',
+                width: '280px',
                 objectFit: 'contain',
                 display: 'block'
               }}
