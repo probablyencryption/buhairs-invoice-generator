@@ -32,6 +32,7 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
         width: '827px', 
         height: '591px',
         backgroundColor: '#ffffff',
+        color: '#1A1A1A',
         fontFamily: 'Inter, sans-serif',
         position: 'relative',
         border: 'none',
@@ -50,7 +51,7 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
         <div style={{ textAlign: 'left' }}>
           <div style={{ 
             fontSize: '20px', 
-            fontWeight: 600,
+            fontWeight: 500,
             letterSpacing: '0.08em',
             lineHeight: '1.3'
           }}>
@@ -94,7 +95,7 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
       }}>
         <h1 style={{ 
           fontSize: '38px',
-          fontWeight: 700,
+          fontWeight: 500,
           letterSpacing: '0.12em',
           marginBottom: '12px',
           textAlign: 'center'
@@ -110,7 +111,7 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
           textAlign: 'center'
         }}>
           <div style={{ 
-            fontWeight: 500,
+            fontWeight: 400,
             marginBottom: '8px'
           }}>
             {customerName}
@@ -148,7 +149,7 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
         {preCode && (
           <div style={{ 
             fontSize: '28px',
-            fontWeight: 700,
+            fontWeight: 500,
             letterSpacing: '0.08em',
             textAlign: 'right',
             marginBottom: '6px'
