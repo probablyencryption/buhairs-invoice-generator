@@ -26,43 +26,73 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
   return (
     <div 
       ref={ref}
-      className="relative bg-white w-full aspect-[7/5] border-2 border-muted shadow-lg rounded-md overflow-hidden"
-      style={{ maxWidth: '70px' }}
+      className="relative bg-white border-2 border-gray-300 shadow-lg"
+      style={{ 
+        width: '2646px',
+        height: '1890px',
+        fontFamily: 'Helvetica, Arial, sans-serif',
+      }}
       data-testid="invoice-preview"
     >
-      <div className="absolute inset-0 p-6 flex flex-col">
-        <div className="flex justify-between items-center mb-4">
-          <div className="text-left">
-            <div className="text-sm font-normal tracking-wide" style={{ fontFamily: 'Inter, sans-serif' }}>
-              INVOICE {invoiceNumber}
+      <div className="flex flex-col h-full">
+        <div className="px-16 pt-12 pb-8">
+          <div className="flex justify-between items-start">
+            <div className="text-left">
+              <div className="text-5xl font-bold mb-3" style={{ fontSize: '48px', lineHeight: '1.2' }}>
+                INVOICE {invoiceNumber}
+              </div>
+              <div className="text-4xl" style={{ fontSize: '36px', lineHeight: '1.2' }}>
+                DATE: {date}
+              </div>
             </div>
-            <div className="text-sm mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>
-              DATE: {date}
-            </div>
+            
+            {logoUrl && (
+              <div 
+                className="flex items-center justify-center bg-white"
+                style={{
+                  width: '660px',
+                  height: '380px',
+                  border: '12px solid #B22222',
+                  padding: '20px'
+                }}
+              >
+                <img 
+                  src={logoUrl} 
+                  alt="Bu Luxury Hairs Logo" 
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'contain'
+                  }}
+                  data-testid="invoice-logo"
+                />
+              </div>
+            )}
           </div>
-          
-          {logoUrl && (
-            <div className="flex-shrink-0">
-              <img 
-                src={logoUrl} 
-                alt="Bu Luxury Hairs Logo" 
-                className="h-18 w-auto object-contain"
-                data-testid="invoice-logo"
-              />
-            </div>
-          )}
         </div>
 
-        <div className="flex-1 flex flex-col items-center px-8 pt-2 overflow-hidden">
+        <div 
+          className="w-full"
+          style={{
+            borderBottom: '10px solid #3BB143',
+            marginBottom: '60px'
+          }}
+        />
+
+        <div className="flex-1 flex flex-col items-center px-16">
           <h1 
-            className="text-3xl font-bold mb-8 tracking-wider whitespace-nowrap text-center"
-            style={{ fontFamily: 'Inter, sans-serif', letterSpacing: '0.15em' }}
+            className="text-center font-bold uppercase mb-16"
+            style={{ 
+              fontSize: '120px',
+              letterSpacing: '0.2em',
+              lineHeight: '1.2'
+            }}
           >
             DELIVERY DETAILS
           </h1>
 
-          <div className="space-y-2 text-xl text-center" style={{ fontFamily: 'Inter, sans-serif' }}>
-            <div className="font-medium">{customerName}</div>
+          <div className="text-center space-y-6" style={{ fontSize: '56px', lineHeight: '1.4' }}>
+            <div className="font-bold">{customerName}</div>
             <div className="font-normal">{customerPhone}</div>
             {addressLines.map((line, index) => (
               <div key={index} className="font-normal">{line}</div>
@@ -70,20 +100,33 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
           </div>
           
           {preCode && (
-            <div className="mt-4 text-2xl font-bold text-left w-full pl-8" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <div 
+              className="mt-12 font-bold text-left w-full"
+              style={{ 
+                fontSize: '64px',
+                paddingLeft: '120px'
+              }}
+            >
               PRE{preCode}
             </div>
           )}
         </div>
 
-        <div className="text-center pb-3">
-          <div className="text-center text-sm tracking-wider overflow-hidden mb-1">
+        <div className="text-center pb-12 mt-auto px-16">
+          <div 
+            className="text-center tracking-wider mb-4"
+            style={{ 
+              fontSize: '32px',
+              letterSpacing: '0.05em'
+            }}
+          >
             ************************************************
           </div>
-          <div className="whitespace-nowrap">
-            <span className="text-sm tracking-wide px-2" style={{ fontFamily: 'Inter, sans-serif' }}>
-              Thank you for shopping with Bu.Hairs!
-            </span>
+          <div 
+            className="font-normal"
+            style={{ fontSize: '40px' }}
+          >
+            Thank you for shopping with Bu.Hairs!
           </div>
         </div>
       </div>
