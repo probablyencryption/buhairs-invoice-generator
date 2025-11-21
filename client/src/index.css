@@ -286,19 +286,3 @@
     inset: -1px;
   }
 }
-
-/* Invoice Print Styles */
-@media print {
-  [data-testid="invoice-preview"] {
-    width: 70cm !important;
-    height: 50cm !important;
-    margin: 0 !important;
-    border: none !important;
-    box-shadow: none !important;
-  }
-  
-  @page {
-    size: 70cm 50cm;
-    margin: 0;
-  }
-}

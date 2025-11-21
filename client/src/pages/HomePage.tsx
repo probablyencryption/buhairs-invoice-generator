@@ -209,16 +209,8 @@ export default function HomePage() {
 
               <div className="space-y-4">
                 <h2 className="text-xl font-semibold">Preview</h2>
-                <div className="flex justify-center overflow-auto">
-                  <div
-                    style={{
-                      transform: 'scale(0.28)',
-                      transformOrigin: 'top center',
-                      marginBottom: '-1400px'
-                    }}
-                  >
-                    <InvoicePreview ref={invoicePreviewRef} {...previewData} logoUrl={logoUrl || undefined} />
-                  </div>
+                <div className="flex justify-center">
+                  <InvoicePreview ref={invoicePreviewRef} {...previewData} logoUrl={logoUrl || undefined} />
                 </div>
               </div>
             </div>
