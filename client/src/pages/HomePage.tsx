@@ -285,7 +285,8 @@ export default function HomePage() {
   };
 
   const handleViewInvoice = (invoice: InvoiceData) => {
-    setPreviewData({ ...invoice, preCode: invoice.preCode || undefined });
+    const cleanPreCode = invoice.preCode && invoice.preCode.trim() !== '' ? invoice.preCode : undefined;
+    setPreviewData({ ...invoice, preCode: cleanPreCode });
     setActiveTab('single');
     toast({
       title: 'Invoice loaded',
