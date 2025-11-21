@@ -74,17 +74,17 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
           </div>
         </div>
 
-        <div className="relative pb-2">
+        <div className="relative pb-2 px-3">
           {preCode && (
-            <div className="text-base font-bold text-right absolute bottom-full right-0 mb-0.5" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <div className="text-base font-bold text-right mb-0.5" style={{ fontFamily: 'Inter, sans-serif' }}>
               PRE{preCode}
             </div>
           )}
           <div className="text-center text-xs tracking-wider overflow-hidden mb-0.5">
             ************************************************
           </div>
-          <div className="whitespace-nowrap">
-            <span className="text-xs tracking-wide px-1" style={{ fontFamily: 'Inter, sans-serif' }}>
+          <div className="text-center">
+            <span className="text-xs tracking-wide" style={{ fontFamily: 'Inter, sans-serif' }}>
               Thank you for shopping with Bu.Hairs!
             </span>
           </div>
