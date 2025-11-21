@@ -134,39 +134,154 @@ export default function HomePage() {
       await queryClient.invalidateQueries({ queryKey: ['/api/settings/invoice-number'] });
       await queryClient.invalidateQueries({ queryKey: ['/api/invoices'] });
       
-      setTimeout(async () => {
-        if (invoicePreviewRef.current) {
-          try {
-            await generateInvoicePDF(invoicePreviewRef.current, data.invoiceNumber, format);
-            toast({
-              title: 'Invoice generated',
-              description: `Invoice ${data.invoiceNumber} has been downloaded as ${format.toUpperCase()}.`,
-            });
-          } catch (error) {
-            toast({
-              title: 'Download failed',
-              description: 'Failed to generate the download file',
-              variant: 'destructive',
-            });
-          }
+      await new Promise(resolve => requestAnimationFrame(() => {
+        requestAnimationFrame(resolve);
+      }));
+
+      if (invoicePreviewRef.current) {
+        try {
+          await generateInvoicePDF(invoicePreviewRef.current, data.invoiceNumber, format);
+          toast({
+            title: 'Invoice generated',
+            description: `Invoice ${data.invoiceNumber} has been downloaded as ${format.toUpperCase()}.`,
+          });
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          toast({
+            title: 'PDF generation failed',
+            description: `Failed to generate ${format.toUpperCase()} for invoice ${data.invoiceNumber}: ${errorMessage}`,
+            variant: 'destructive',
+          });
         }
-      }, 100);
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to save invoice';
       toast({
         title: 'Error',
-        description: message,
+        description: `Failed to create invoice ${data.invoiceNumber}: ${message}`,
         variant: 'destructive',
       });
     }
   };
 
-  const handleBulkGenerate = (data: { date: string; rawData: string }) => {
-    console.log('Process bulk data:', data);
-    toast({
-      title: 'Processing bulk invoices',
-      description: 'AI is extracting customer data and generating invoices...',
-    });
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
+
+  const handleBulkGenerate = async (data: { date: string; rawData: string; includePre: boolean }) => {
+    setIsBulkProcessing(true);
+    
+    try {
+      toast({
+        title: 'Processing...',
+        description: 'AI is extracting customer data and creating invoices...',
+      });
+
+      const response = await apiRequest('POST', '/api/invoices/bulk-process', {
+        rawData: data.rawData,
+        includePre: data.includePre,
+        date: data.date,
+      });
+
+      const result = await response.json();
+      
+      if (!result.invoices || result.invoices.length === 0) {
+        toast({
+          title: 'No invoices created',
+          description: 'Could not extract customer data. Please check the format.',
+          variant: 'destructive',
+        });
+        setIsBulkProcessing(false);
+        return;
+      }
+
+      const successfulInvoices = result.invoices.filter((inv: any) => inv.success);
+      const failedInvoices = result.invoices.filter((inv: any) => !inv.success);
+
+      if (failedInvoices.length > 0) {
+        toast({
+          title: 'Some invoices failed',
+          description: `${failedInvoices.length} of ${result.invoices.length} invoices failed to create. Check console for details.`,
+          variant: 'destructive',
+        });
+        console.error('Failed invoices:', failedInvoices);
+      }
+
+      if (successfulInvoices.length === 0) {
+        toast({
+          title: 'All invoices failed',
+          description: 'Could not create any invoices. Please try again.',
+          variant: 'destructive',
+        });
+        setIsBulkProcessing(false);
+        return;
+      }
+
+      toast({
+        title: `Generating PDFs...`,
+        description: `Creating ${successfulInvoices.length} PDF files...`,
+      });
+
+      await queryClient.invalidateQueries({ queryKey: ['/api/settings/invoice-number'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/invoices'] });
+
+      let pdfSuccessCount = 0;
+      const pdfFailures: string[] = [];
+
+      for (const invoice of successfulInvoices) {
+        const invoiceData = {
+          invoiceNumber: invoice.invoiceNumber,
+          date: invoice.date,
+          customerName: invoice.customerName,
+          customerPhone: invoice.customerPhone,
+          customerAddress: invoice.customerAddress,
+          preCode: invoice.preCode || undefined,
+        };
+
+        setPreviewData(invoiceData);
+
+        await new Promise(resolve => requestAnimationFrame(() => {
+          requestAnimationFrame(resolve);
+        }));
+
+        if (invoicePreviewRef.current) {
+          try {
+            await generateInvoicePDF(invoicePreviewRef.current, invoice.invoiceNumber, 'pdf');
+            pdfSuccessCount++;
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            console.error(`Failed to generate PDF for ${invoice.invoiceNumber}:`, error);
+            pdfFailures.push(invoice.invoiceNumber);
+            toast({
+              title: `PDF generation failed`,
+              description: `Failed to generate PDF for invoice ${invoice.invoiceNumber}: ${errorMessage}`,
+              variant: 'destructive',
+            });
+          }
+        }
+      }
+
+      if (pdfSuccessCount > 0) {
+        toast({
+          title: 'Success!',
+          description: `Generated ${pdfSuccessCount} PDFs successfully${pdfFailures.length > 0 ? `. Failed: ${pdfFailures.join(', ')}` : ''}.`,
+        });
+      } else if (pdfFailures.length > 0) {
+        toast({
+          title: 'All PDFs failed',
+          description: `Failed to generate PDFs for: ${pdfFailures.join(', ')}`,
+          variant: 'destructive',
+        });
+      }
+
+      setIsBulkProcessing(false);
+    } catch (error: any) {
+      console.error('Bulk generation error:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to process bulk invoices',
+        variant: 'destructive',
+      });
+      setIsBulkProcessing(false);
+    }
   };
 
   const handleViewInvoice = (invoice: InvoiceData) => {
@@ -209,17 +324,25 @@ export default function HomePage() {
       </header>
 
       <main className="container mx-auto px-6 py-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <div className="fixed opacity-0 pointer-events-none -z-50" style={{ width: '827px', height: '591px' }}>
+          <InvoicePreview ref={invoicePreviewRef} {...previewData} logoUrl={logoUrl || undefined} />
+        </div>
+
+        <Tabs value={activeTab} onValueChange={(value) => {
+          if (!isBulkProcessing) {
+            setActiveTab(value);
+          }
+        }} className="space-y-6">
           <TabsList className="grid w-full max-w-md grid-cols-3 mx-auto" data-testid="tabs-navigation">
-            <TabsTrigger value="single" className="gap-2" data-testid="tab-single">
+            <TabsTrigger value="single" className="gap-2" data-testid="tab-single" disabled={isBulkProcessing}>
               <FileText className="h-4 w-4" />
               Single
             </TabsTrigger>
-            <TabsTrigger value="bulk" className="gap-2" data-testid="tab-bulk">
+            <TabsTrigger value="bulk" className="gap-2" data-testid="tab-bulk" disabled={isBulkProcessing}>
               <FileText className="h-4 w-4" />
               Bulk
             </TabsTrigger>
-            <TabsTrigger value="history" className="gap-2" data-testid="tab-history">
+            <TabsTrigger value="history" className="gap-2" data-testid="tab-history" disabled={isBulkProcessing}>
               <History className="h-4 w-4" />
               History
             </TabsTrigger>
@@ -240,18 +363,25 @@ export default function HomePage() {
               <div className="space-y-4">
                 <h2 className="text-xl font-semibold">Preview</h2>
                 <div className="flex justify-center">
-                  <InvoicePreview ref={invoicePreviewRef} {...previewData} logoUrl={logoUrl || undefined} />
+                  <InvoicePreview {...previewData} logoUrl={logoUrl || undefined} />
                 </div>
               </div>
             </div>
           </TabsContent>
 
           <TabsContent value="bulk">
-            <div className="max-w-4xl mx-auto">
+            <div className="grid lg:grid-cols-2 gap-6">
               <Card className="p-6">
                 <h2 className="text-xl font-semibold mb-6">Bulk Invoice Generation</h2>
-                <BulkInvoiceForm onGenerate={handleBulkGenerate} />
+                <BulkInvoiceForm onGenerate={handleBulkGenerate} isProcessing={isBulkProcessing} />
               </Card>
+
+              <div className="space-y-4">
+                <h2 className="text-xl font-semibold">Preview (Last Generated)</h2>
+                <div className="flex justify-center">
+                  <InvoicePreview {...previewData} logoUrl={logoUrl || undefined} />
+                </div>
+              </div>
             </div>
           </TabsContent>
 

@@ -182,10 +182,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/invoices/bulk-process", requireAuth, async (req, res) => {
     try {
-      const { rawData, includePre } = req.body;
+      const { rawData, includePre, date } = req.body;
 
       if (!rawData || typeof rawData !== 'string') {
         return res.status(400).json({ error: "Invalid customer data" });
+      }
+
+      if (!date || typeof date !== 'string') {
+        return res.status(400).json({ error: "Invalid date" });
       }
 
       if (!process.env.OPENAI_API_KEY) {
@@ -255,7 +259,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      res.json({ customers: parsedData });
+      const setting = await storage.getSetting("last_invoice_number");
+      let currentNumber = setting ? parseInt(setting.value) : 2799;
+
+      const invoicesCreated: Array<{
+        invoiceNumber: string;
+        date: string;
+        customerName: string;
+        customerPhone: string;
+        customerAddress: string;
+        preCode?: string;
+        success: boolean;
+        error?: string;
+      }> = [];
+
+      for (const customer of parsedData) {
+        try {
+          currentNumber++;
+          const invoiceNumber = `BLH#${currentNumber}`;
+
+          const invoiceData = {
+            invoiceNumber,
+            date,
+            customerName: customer.name,
+            customerPhone: customer.phone,
+            customerAddress: customer.address,
+            preCode: customer.preCode || null,
+          };
+
+          const validatedData = insertInvoiceSchema.parse(invoiceData);
+          await storage.createInvoice(validatedData);
+
+          await storage.setSetting({
+            key: "last_invoice_number",
+            value: currentNumber.toString(),
+          });
+
+          invoicesCreated.push({
+            invoiceNumber: invoiceData.invoiceNumber,
+            date: invoiceData.date,
+            customerName: invoiceData.customerName,
+            customerPhone: invoiceData.customerPhone,
+            customerAddress: invoiceData.customerAddress,
+            preCode: invoiceData.preCode || undefined,
+            success: true,
+          });
+        } catch (invoiceError: any) {
+          invoicesCreated.push({
+            invoiceNumber: `BLH#${currentNumber}`,
+            date,
+            customerName: customer.name,
+            customerPhone: customer.phone,
+            customerAddress: customer.address,
+            preCode: customer.preCode,
+            success: false,
+            error: invoiceError.message || 'Unknown error',
+          });
+        }
+      }
+
+      res.json({ invoices: invoicesCreated });
     } catch (error: any) {
       console.error('Bulk processing error:', error);
       res.status(500).json({ 
