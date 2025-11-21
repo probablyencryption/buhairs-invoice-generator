@@ -12,11 +12,15 @@ export async function generateInvoicePDF(
   const printWidth = 827;
   const printHeight = 591;
   
+  // Force a reflow to ensure all inline styles are applied
+  element.offsetHeight;
+  
+  // Wait for styles to be fully computed and applied
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
   // Calculate scale factor to render at print resolution
-  // Current preview is 1414 x 1007, scale to 827 x 591
-  const scaleX = printWidth / element.offsetWidth;
-  const scaleY = printHeight / element.offsetHeight;
-  const scale = Math.max(scaleX, scaleY);
+  // We want to render at 3x scale for high quality, then resize to target dimensions
+  const scale = 3;
   
   const canvas = await html2canvas(element, {
     scale: scale,
@@ -25,6 +29,8 @@ export async function generateInvoicePDF(
     backgroundColor: '#ffffff',
     width: element.offsetWidth,
     height: element.offsetHeight,
+    windowWidth: element.offsetWidth,
+    windowHeight: element.offsetHeight,
   });
 
   if (format === 'jpeg') {

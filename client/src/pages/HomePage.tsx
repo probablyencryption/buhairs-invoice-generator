@@ -136,9 +136,8 @@ export default function HomePage() {
       await queryClient.invalidateQueries({ queryKey: ['/api/settings/invoice-number'] });
       await queryClient.invalidateQueries({ queryKey: ['/api/invoices'] });
       
-      await new Promise(resolve => requestAnimationFrame(() => {
-        requestAnimationFrame(resolve);
-      }));
+      // Wait for DOM to update and all styles to be applied
+      await new Promise(resolve => setTimeout(resolve, 150));
 
       if (invoicePreviewRef.current) {
         try {

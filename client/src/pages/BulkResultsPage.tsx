@@ -38,8 +38,8 @@ export default function BulkResultsPage({ invoices, format, logo }: BulkResultsP
     setIsGenerating(true);
     setPreviewInvoice(invoice);
     
-    // Wait for DOM to update and render the hidden invoice
-    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    // Wait for DOM to update and all styles to be applied
+    await new Promise(resolve => setTimeout(resolve, 150));
 
     try {
       if (!invoiceRef.current) {
