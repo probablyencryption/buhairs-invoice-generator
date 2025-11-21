@@ -28,68 +28,145 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
   return (
     <div 
       ref={ref}
-      className="relative bg-white border-2 border-muted shadow-lg rounded-md overflow-hidden"
-      style={{ width: '827px', height: '591px' }}
+      style={{ 
+        width: '827px', 
+        height: '591px',
+        backgroundColor: '#ffffff',
+        fontFamily: 'Inter, sans-serif',
+        position: 'relative',
+        border: 'none',
+        boxShadow: 'none'
+      }}
       data-testid="invoice-preview"
     >
-      <div className="absolute inset-0 px-3 pt-1 pb-3 flex flex-col">
-        <div className="flex justify-between items-center mb-1">
-          <div className="text-left">
-            <div className="text-xs font-normal tracking-wide" style={{ fontFamily: 'Inter, sans-serif' }}>
-              INVOICE {invoiceNumber}
-            </div>
-            <div className="text-xs mt-0.5" style={{ fontFamily: 'Inter, sans-serif' }}>
-              DATE: {date}
-            </div>
+      {/* Header Section - Invoice/Date and Logo */}
+      <div style={{ 
+        padding: '18px 20px 0 20px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start'
+      }}>
+        {/* Invoice and Date - Top Left */}
+        <div style={{ textAlign: 'left' }}>
+          <div style={{ 
+            fontSize: '11px', 
+            fontWeight: 600,
+            letterSpacing: '0.02em'
+          }}>
+            INVOICE {invoiceNumber}
           </div>
-          
-          {logoUrl && (
-            <div className="flex-shrink-0">
-              <img 
-                src={logoUrl} 
-                alt="Bu Luxury Hairs Logo" 
-                className="h-20 w-auto object-contain"
-                data-testid="invoice-logo"
-              />
-            </div>
-          )}
-        </div>
-
-        <div className="flex flex-col items-center px-4 overflow-hidden mt-6">
-          <h1 
-            className="text-base font-bold mb-6 tracking-wider whitespace-nowrap text-center"
-            style={{ fontFamily: 'Inter, sans-serif', letterSpacing: '0.15em' }}
-          >
-            DELIVERY DETAILS
-          </h1>
-
-          <div className="text-sm text-center mb-8" style={{ fontFamily: 'Inter, sans-serif' }}>
-            <div className="font-medium mb-2">{customerName}</div>
-            <div className="font-normal mb-2">{customerPhone}</div>
-            <div className="space-y-1">
-              {truncatedAddressLines.map((line, index) => (
-                <div key={index} className="font-normal">{line}</div>
-              ))}
-            </div>
+          <div style={{ 
+            fontSize: '11px',
+            fontWeight: 400,
+            marginTop: '2px'
+          }}>
+            DATE: {date}
           </div>
         </div>
-
-        <div className="flex-1"></div>
-
-        <div className="relative pb-2 px-3">
-          {preCode && (
-            <div className="text-base font-bold text-right mb-0.5" style={{ fontFamily: 'Inter, sans-serif' }}>
-              PRE{preCode}
-            </div>
-          )}
-          <div className="text-center text-xs tracking-wider overflow-hidden mb-0.5">
-            ************************************************
+        
+        {/* Logo - Top Right */}
+        {logoUrl && (
+          <div style={{ flexShrink: 0 }}>
+            <img 
+              src={logoUrl} 
+              alt="Bu Luxury Hairs Logo" 
+              style={{ 
+                height: '110px',
+                width: 'auto',
+                objectFit: 'contain',
+                display: 'block'
+              }}
+              data-testid="invoice-logo"
+            />
           </div>
-          <div className="text-center">
-            <span className="text-xs tracking-wide" style={{ fontFamily: 'Inter, sans-serif' }}>
-              Thank you for shopping with Bu.Hairs!
-            </span>
+        )}
+      </div>
+
+      {/* Main Content - Delivery Details */}
+      <div style={{ 
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        marginTop: '45px'
+      }}>
+        <h1 style={{ 
+          fontSize: '24px',
+          fontWeight: 700,
+          letterSpacing: '0.08em',
+          marginBottom: '20px',
+          textAlign: 'center'
+        }}>
+          DELIVERY DETAILS
+        </h1>
+
+        {/* Customer Information */}
+        <div style={{ 
+          fontSize: '18px',
+          lineHeight: '1.5',
+          textAlign: 'center'
+        }}>
+          <div style={{ 
+            fontWeight: 500,
+            marginBottom: '8px'
+          }}>
+            {customerName}
           </div>
+          <div style={{ 
+            fontWeight: 400,
+            marginBottom: '8px'
+          }}>
+            {customerPhone}
+          </div>
+          <div>
+            {truncatedAddressLines.map((line, index) => (
+              <div 
+                key={index} 
+                style={{ 
+                  fontWeight: 400,
+                  marginBottom: index < truncatedAddressLines.length - 1 ? '4px' : '0'
+                }}
+              >
+                {line}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Footer Section - PRE Code, Asterisks, Thank You */}
+      <div style={{ 
+        position: 'absolute',
+        bottom: '0',
+        left: '0',
+        right: '0',
+        padding: '0 20px 18px 20px'
+      }}>
+        {preCode && (
+          <div style={{ 
+            fontSize: '20px',
+            fontWeight: 700,
+            textAlign: 'right',
+            marginBottom: '4px'
+          }}>
+            PRE{preCode}
+          </div>
+        )}
+        <div style={{ 
+          fontSize: '11px',
+          letterSpacing: '0.05em',
+          marginBottom: '4px',
+          textAlign: 'center',
+          overflow: 'hidden'
+        }}>
+          ************************************************
+        </div>
+        <div style={{ textAlign: 'center' }}>
+          <span style={{ 
+            fontSize: '11px',
+            letterSpacing: '0.02em'
+          }}>
+            Thank you for shopping with Bu.Hairs!
+          </span>
         </div>
       </div>
     </div>
