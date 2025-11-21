@@ -91,13 +91,13 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        marginTop: '10px'
+        marginTop: '2px'
       }}>
         <h1 style={{ 
           fontSize: '38px',
           fontWeight: 500,
           letterSpacing: '0.12em',
-          marginBottom: '12px',
+          marginBottom: '16px',
           textAlign: 'center'
         }}>
           DELIVERY DETAILS
