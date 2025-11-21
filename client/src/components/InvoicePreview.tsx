@@ -21,6 +21,8 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
     logoUrl,
   }, ref) => {
 
+  console.log('InvoicePreview props:', { invoiceNumber, preCode, hasPreCode: !!preCode });
+
   const addressLines = customerAddress.split('\n').filter(line => line.trim());
   // Truncate address to max 3 lines
   const truncatedAddressLines = addressLines.slice(0, 3);
