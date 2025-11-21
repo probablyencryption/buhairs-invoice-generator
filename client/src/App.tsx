@@ -34,6 +34,8 @@ function BulkResultsPageWrapper() {
     
     try {
       const parsedData = JSON.parse(bulkResultsData);
+      console.log('Retrieved bulk results from sessionStorage:', parsedData);
+      console.log('First invoice PRE code:', parsedData.invoices?.[0]?.preCode);
       setData(parsedData);
       // Clear sessionStorage after successfully loading the data
       sessionStorage.removeItem('bulk_results');

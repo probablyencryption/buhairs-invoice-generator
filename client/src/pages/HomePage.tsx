@@ -228,6 +228,8 @@ export default function HomePage() {
         logo: logoUrl || null,
       };
       
+      console.log('Storing bulk results in sessionStorage:', bulkResultsData);
+      console.log('First invoice PRE code:', successfulInvoices[0]?.preCode);
       sessionStorage.setItem('bulk_results', JSON.stringify(bulkResultsData));
 
       toast({
