@@ -49,17 +49,18 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
         {/* Invoice and Date - Top Left */}
         <div style={{ textAlign: 'left' }}>
           <div style={{ 
-            fontSize: '16px', 
+            fontSize: '20px', 
             fontWeight: 600,
-            letterSpacing: '0.02em',
+            letterSpacing: '0.08em',
             lineHeight: '1.3'
           }}>
             INVOICE {invoiceNumber}
           </div>
           <div style={{ 
-            fontSize: '16px',
+            fontSize: '20px',
             fontWeight: 400,
             marginTop: '2px',
+            letterSpacing: '0.08em',
             lineHeight: '1.3'
           }}>
             DATE: {date}
@@ -73,8 +74,8 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
               src={logoUrl} 
               alt="Bu Luxury Hairs Logo" 
               style={{ 
-                height: '150px',
-                width: 'auto',
+                height: '170px',
+                width: '170px',
                 objectFit: 'contain',
                 display: 'block'
               }}
@@ -89,12 +90,12 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        marginTop: '20px'
+        marginTop: '10px'
       }}>
         <h1 style={{ 
-          fontSize: '32px',
+          fontSize: '38px',
           fontWeight: 700,
-          letterSpacing: '0.08em',
+          letterSpacing: '0.12em',
           marginBottom: '12px',
           textAlign: 'center'
         }}>
@@ -103,8 +104,9 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
 
         {/* Customer Information */}
         <div style={{ 
-          fontSize: '26px',
+          fontSize: '32px',
           lineHeight: '1.4',
+          letterSpacing: '0.05em',
           textAlign: 'center'
         }}>
           <div style={{ 
@@ -145,8 +147,9 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
       }}>
         {preCode && (
           <div style={{ 
-            fontSize: '26px',
+            fontSize: '28px',
             fontWeight: 700,
+            letterSpacing: '0.08em',
             textAlign: 'right',
             marginBottom: '6px'
           }}>
@@ -154,8 +157,8 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
           </div>
         )}
         <div style={{ 
-          fontSize: '16px',
-          letterSpacing: '0.05em',
+          fontSize: '20px',
+          letterSpacing: '0.08em',
           marginBottom: '6px',
           textAlign: 'center',
           overflow: 'hidden'
@@ -164,8 +167,8 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
         </div>
         <div style={{ textAlign: 'center' }}>
           <span style={{ 
-            fontSize: '16px',
-            letterSpacing: '0.02em'
+            fontSize: '20px',
+            letterSpacing: '0.06em'
           }}>
             Thank you for shopping with Bu.Hairs!
           </span>
