@@ -76,7 +76,7 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
 
         <div className="relative pb-2">
           {preCode && (
-            <div className="text-xs font-bold text-right absolute bottom-full right-0 mb-0.5 pr-1" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <div className="text-base font-bold text-right absolute bottom-full right-0 mb-0.5" style={{ fontFamily: 'Inter, sans-serif' }}>
               PRE{preCode}
             </div>
           )}
