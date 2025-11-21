@@ -31,7 +31,7 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
       data-testid="invoice-preview"
     >
       <div className="absolute inset-0 px-6 pt-2 pb-6 flex flex-col">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-2">
           <div className="text-left">
             <div className="text-sm font-normal tracking-wide" style={{ fontFamily: 'Inter, sans-serif' }}>
               INVOICE {invoiceNumber}
@@ -53,9 +53,9 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
           )}
         </div>
 
-        <div className="flex-1 flex flex-col items-center px-8 pt-2 overflow-hidden">
+        <div className="flex-1 flex flex-col items-center px-8 overflow-hidden">
           <h1 
-            className="text-3xl font-bold mb-8 tracking-wider whitespace-nowrap text-center"
+            className="text-2xl font-bold mb-4 tracking-wider whitespace-nowrap text-center"
             style={{ fontFamily: 'Inter, sans-serif', letterSpacing: '0.15em' }}
           >
             DELIVERY DETAILS
