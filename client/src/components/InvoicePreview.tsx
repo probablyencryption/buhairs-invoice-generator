@@ -55,15 +55,15 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
           )}
         </div>
 
-        <div className="flex-1 flex flex-col items-center px-4 overflow-hidden">
+        <div className="flex flex-col items-center px-4 overflow-hidden mt-6">
           <h1 
-            className="text-base font-bold mb-2 tracking-wider whitespace-nowrap text-center"
+            className="text-base font-bold mb-6 tracking-wider whitespace-nowrap text-center"
             style={{ fontFamily: 'Inter, sans-serif', letterSpacing: '0.15em' }}
           >
             DELIVERY DETAILS
           </h1>
 
-          <div className="text-sm text-center" style={{ fontFamily: 'Inter, sans-serif' }}>
+          <div className="text-sm text-center mb-8" style={{ fontFamily: 'Inter, sans-serif' }}>
             <div className="font-medium mb-2">{customerName}</div>
             <div className="font-normal mb-2">{customerPhone}</div>
             <div className="space-y-1">
@@ -73,6 +73,8 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
             </div>
           </div>
         </div>
+
+        <div className="flex-1"></div>
 
         <div className="relative pb-2 px-3">
           {preCode && (
