@@ -22,6 +22,8 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
   }, ref) => {
 
   const addressLines = customerAddress.split('\n').filter(line => line.trim());
+  // Truncate address to max 3 lines
+  const truncatedAddressLines = addressLines.slice(0, 3);
 
   return (
     <div 
@@ -61,20 +63,22 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
             DELIVERY DETAILS
           </h1>
 
-          <div className="space-y-1 text-sm text-center" style={{ fontFamily: 'Inter, sans-serif' }}>
-            <div className="font-medium">{customerName}</div>
-            <div className="font-normal">{customerPhone}</div>
-            {addressLines.map((line, index) => (
-              <div key={index} className="font-normal">{line}</div>
-            ))}
-          </div>
-          
-          {preCode && (
-            <div className="mt-2 text-base font-bold text-left w-full pl-4" style={{ fontFamily: 'Inter, sans-serif' }}>
-              PRE{preCode}
+          <div className="text-sm text-center" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <div className="font-medium mb-2">{customerName}</div>
+            <div className="font-normal mb-2">{customerPhone}</div>
+            <div className="space-y-1">
+              {truncatedAddressLines.map((line, index) => (
+                <div key={index} className="font-normal">{line}</div>
+              ))}
             </div>
-          )}
+          </div>
         </div>
+
+        {preCode && (
+          <div className="text-base font-bold text-left mb-1 px-3" style={{ fontFamily: 'Inter, sans-serif' }}>
+            PRE{preCode}
+          </div>
+        )}
 
         <div className="text-center pb-2">
           <div className="text-center text-xs tracking-wider overflow-hidden mb-0.5">
