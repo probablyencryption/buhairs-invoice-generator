@@ -64,6 +64,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/auth/session", requireAuth, async (req, res) => {
+    res.json({ valid: true });
+  });
+
   app.get("/api/settings/logo", async (req, res) => {
     try {
       const logoSetting = await storage.getSetting("app_logo");

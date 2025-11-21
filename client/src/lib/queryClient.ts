@@ -1,7 +1,17 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+function handleUnauthorized() {
+  sessionStorage.removeItem('bu_authenticated');
+  sessionStorage.removeItem('bu_session');
+  window.location.reload();
+}
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
+    if (res.status === 401) {
+      handleUnauthorized();
+      throw new Error('Unauthorized');
+    }
     const text = (await res.text()) || res.statusText;
     throw new Error(`${res.status}: ${text}`);
   }
@@ -43,8 +53,12 @@ export const getQueryFn: <T>(options: {
       credentials: "include",
     });
 
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
+    if (res.status === 401) {
+      if (unauthorizedBehavior === "returnNull") {
+        return null;
+      }
+      handleUnauthorized();
+      throw new Error('Unauthorized');
     }
 
     await throwIfResNotOk(res);
@@ -56,8 +70,8 @@ export const queryClient = new QueryClient({
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
-      refetchOnWindowFocus: false,
-      staleTime: Infinity,
+      refetchOnWindowFocus: true,
+      staleTime: 0,
       retry: false,
     },
     mutations: {

@@ -29,8 +29,38 @@ export default function HomePage() {
   const invoicePreviewRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const authenticated = sessionStorage.getItem('bu_authenticated');
-    setIsAuthenticated(authenticated === 'true');
+    const validateSession = async () => {
+      const authenticated = sessionStorage.getItem('bu_authenticated');
+      const sessionToken = sessionStorage.getItem('bu_session');
+      
+      if (authenticated === 'true' && sessionToken) {
+        try {
+          const response = await fetch('/api/auth/session', {
+            headers: {
+              'x-app-session': sessionToken,
+            },
+          });
+          
+          if (response.ok) {
+            setIsAuthenticated(true);
+          } else {
+            // Session is invalid, clear auth state
+            sessionStorage.removeItem('bu_authenticated');
+            sessionStorage.removeItem('bu_session');
+            setIsAuthenticated(false);
+          }
+        } catch (error) {
+          // Network error or server down, clear auth state
+          sessionStorage.removeItem('bu_authenticated');
+          sessionStorage.removeItem('bu_session');
+          setIsAuthenticated(false);
+        }
+      } else {
+        setIsAuthenticated(false);
+      }
+    };
+    
+    validateSession();
   }, []);
 
   const { data: logoData } = useQuery<{ logo: string | null }>({
