@@ -6,12 +6,14 @@ export async function generateInvoicePDF(
   invoiceNumber: string,
   format: 'pdf' | 'jpeg' = 'pdf'
 ): Promise<void> {
-  // Print dimensions: 70cm x 50cm at 300 DPI = 8268 x 5906 px
-  const printWidth = 8268;
-  const printHeight = 5906;
+  // Print dimensions: 70mm x 50mm at 300 DPI
+  // 70mm = 2.7559 inches * 300 DPI = 827 px
+  // 50mm = 1.9685 inches * 300 DPI = 591 px
+  const printWidth = 827;
+  const printHeight = 591;
   
   // Calculate scale factor to render at print resolution
-  // Current preview is 1414 x 1007, scale up to 8268 x 5906
+  // Current preview is 1414 x 1007, scale to 827 x 591
   const scaleX = printWidth / element.offsetWidth;
   const scaleY = printHeight / element.offsetHeight;
   const scale = Math.max(scaleX, scaleY);
