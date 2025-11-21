@@ -46,7 +46,7 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(
               <img 
                 src={logoUrl} 
                 alt="Bu Luxury Hairs Logo" 
-                className="h-32 w-auto object-contain"
+                className="h-44 w-auto object-contain"
                 data-testid="invoice-logo"
               />
             </div>
