@@ -8,6 +8,8 @@ export interface IStorage {
   createInvoice(invoice: InsertInvoice): Promise<Invoice>;
   getSetting(key: string): Promise<Setting | undefined>;
   setSetting(setting: InsertSetting): Promise<Setting>;
+  getLastInvoiceNumber(): Promise<number>;
+  updateLastInvoiceNumber(newNumber: number): Promise<void>;
 }
 
 export class DbStorage implements IStorage {
@@ -66,6 +68,32 @@ export class DbStorage implements IStorage {
     } catch (error) {
       console.error('Error setting value:', error);
       throw new Error('Failed to update setting');
+    }
+  }
+
+  async getLastInvoiceNumber(): Promise<number> {
+    try {
+      const setting = await this.getSetting('last_invoice_number');
+      return setting ? parseInt(setting.value) : 2799;
+    } catch (error) {
+      console.error('Error fetching last invoice number:', error);
+      return 2799;
+    }
+  }
+
+  async updateLastInvoiceNumber(newNumber: number): Promise<void> {
+    try {
+      if (newNumber < 2799) {
+        throw new Error('Invoice number cannot be less than 2799');
+      }
+      const currentNumber = await this.getLastInvoiceNumber();
+      if (newNumber < currentNumber) {
+        throw new Error(`Invoice number cannot be less than current number (${currentNumber})`);
+      }
+      await this.setSetting({ key: 'last_invoice_number', value: newNumber.toString() });
+    } catch (error) {
+      console.error('Error updating last invoice number:', error);
+      throw error;
     }
   }
 }

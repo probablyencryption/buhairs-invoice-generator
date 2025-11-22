@@ -142,6 +142,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/settings/last-invoice", requireAuth, async (req, res) => {
+    try {
+      const lastNumber = await storage.getLastInvoiceNumber();
+      res.json({ lastInvoiceNumber: lastNumber });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch last invoice number" });
+    }
+  });
+
+  app.patch("/api/settings/last-invoice", requireAuth, async (req, res) => {
+    try {
+      const { invoiceNumber } = req.body;
+      
+      if (!invoiceNumber || typeof invoiceNumber !== 'number') {
+        return res.status(400).json({ error: "Invalid invoice number" });
+      }
+      
+      await storage.updateLastInvoiceNumber(invoiceNumber);
+      res.json({ lastInvoiceNumber: invoiceNumber });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message || "Failed to update invoice number" });
+    }
+  });
+
   app.post("/api/invoices", requireAuth, async (req, res) => {
     try {
       const validatedData = insertInvoiceSchema.parse(req.body);

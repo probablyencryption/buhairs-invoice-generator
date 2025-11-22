@@ -11,6 +11,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { InvoiceNumberControl } from '@/components/InvoiceNumberControl';
 
 interface SingleInvoiceFormProps {
   onGenerate: (data: {
@@ -43,8 +44,8 @@ export default function SingleInvoiceForm({ onGenerate, onPreview, logoUrl, onLo
   const [preCode, setPreCode] = useState('');
   const [downloadFormat, setDownloadFormat] = useState<'pdf' | 'jpeg'>('pdf');
 
-  const { data: invoiceData } = useQuery<{ lastInvoiceNumber: number }>({
-    queryKey: ['/api/settings/invoice-number'],
+  const { data: invoiceData, refetch: refetchInvoiceNumber } = useQuery<{ lastInvoiceNumber: number }>({
+    queryKey: ['/api/settings/last-invoice'],
   });
 
   useEffect(() => {
@@ -55,6 +56,10 @@ export default function SingleInvoiceForm({ onGenerate, onPreview, logoUrl, onLo
       setInvoiceNumber('BLH#2799');
     }
   }, [invoiceData]);
+
+  const handleRefreshInvoiceNumber = () => {
+    refetchInvoiceNumber();
+  };
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -126,13 +131,22 @@ export default function SingleInvoiceForm({ onGenerate, onPreview, logoUrl, onLo
 
       <div className="space-y-2">
         <Label htmlFor="invoiceNumber">Invoice Number</Label>
-        <Input
-          id="invoiceNumber"
-          value={invoiceNumber}
-          readOnly
-          className="bg-muted"
-          data-testid="input-invoice-number"
-        />
+        <div className="flex items-center gap-2">
+          <Input
+            id="invoiceNumber"
+            value={invoiceNumber}
+            readOnly
+            className="bg-muted flex-1"
+            data-testid="input-invoice-number"
+          />
+          <InvoiceNumberControl 
+            currentNumber={invoiceData?.lastInvoiceNumber || 2799}
+            onRefresh={handleRefreshInvoiceNumber}
+          />
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Click refresh to see the latest invoice number or edit to update it manually
+        </p>
       </div>
 
       <div className="space-y-2">

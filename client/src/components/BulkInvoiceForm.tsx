@@ -9,6 +9,9 @@ import { CalendarIcon, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
+import { useQuery } from '@tanstack/react-query';
+import { InvoiceNumberControl } from '@/components/InvoiceNumberControl';
+import { Input } from '@/components/ui/input';
 
 interface BulkInvoiceFormProps {
   onGenerate: (data: { date: string; rawData: string; includePre: boolean; format: 'pdf' | 'jpeg' }) => void;
@@ -20,6 +23,14 @@ export default function BulkInvoiceForm({ onGenerate, isProcessing = false }: Bu
   const [rawData, setRawData] = useState('');
   const [includePre, setIncludePre] = useState(false);
   const [validationError, setValidationError] = useState('');
+
+  const { data: invoiceData, refetch: refetchInvoiceNumber } = useQuery<{ lastInvoiceNumber: number }>({
+    queryKey: ['/api/settings/last-invoice'],
+  });
+
+  const handleRefreshInvoiceNumber = () => {
+    refetchInvoiceNumber();
+  };
 
   const validateAndGenerate = (formatType: 'pdf' | 'jpeg') => {
     setValidationError('');
@@ -73,6 +84,26 @@ export default function BulkInvoiceForm({ onGenerate, isProcessing = false }: Bu
       </Card>
 
       <div className="space-y-6" data-testid="form-bulk-invoice">
+        <div className="space-y-2">
+          <Label htmlFor="lastInvoiceNumber">Last Invoice Number</Label>
+          <div className="flex items-center gap-2">
+            <Input
+              id="lastInvoiceNumber"
+              value={`BLH#${invoiceData?.lastInvoiceNumber || 2799}`}
+              readOnly
+              className="bg-muted flex-1"
+              data-testid="input-last-invoice-number"
+            />
+            <InvoiceNumberControl 
+              currentNumber={invoiceData?.lastInvoiceNumber || 2799}
+              onRefresh={handleRefreshInvoiceNumber}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Next batch will start from BLH#{(invoiceData?.lastInvoiceNumber || 2799) + 1}
+          </p>
+        </div>
+
         <div className="space-y-2">
           <Label>Invoice Date (for all invoices)</Label>
           <Popover>
