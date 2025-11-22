@@ -35,8 +35,6 @@ export default function BulkResultsPage({ invoices, format, logo }: BulkResultsP
   const { toast } = useToast();
 
   const handleDownload = async (invoice: InvoiceData) => {
-    console.log('Download invoice data:', invoice);
-    console.log('PRE code value:', invoice.preCode);
     setIsGenerating(true);
     setPreviewInvoice(invoice);
     
@@ -71,8 +69,6 @@ export default function BulkResultsPage({ invoices, format, logo }: BulkResultsP
   };
 
   const handlePreview = (invoice: InvoiceData) => {
-    console.log('Preview invoice data:', invoice);
-    console.log('PRE code value:', invoice.preCode);
     setPreviewInvoice(invoice);
   };
 

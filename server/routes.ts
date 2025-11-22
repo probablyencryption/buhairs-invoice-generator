@@ -248,15 +248,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
           throw new Error('Response is not an array');
         }
 
-        parsedData = parsedData.map(customer => {
+        parsedData = parsedData.map((customer, index) => {
           const cleaned: any = {
             name: customer.name?.trim() || '',
             phone: customer.phone?.trim() || '',
             address: customer.address?.trim() || '',
+            preCode: null, // Default to null
           };
 
-          if (includePre && customer.preCode) {
-            const preCodeStr = customer.preCode.toString().replace(/\D/g, '');
+          if (includePre) {
+            // Try to get PRE code from OpenAI response
+            let preCodeStr = customer.preCode ? customer.preCode.toString().trim().replace(/\D/g, '') : '';
+            
+            // Fallback: Parse from raw data if OpenAI didn't extract it
+            if (!preCodeStr && rawData) {
+              const rawLines = rawData.trim().split('\n');
+              if (rawLines[index]) {
+                const parts = rawLines[index].split(':');
+                if (parts.length >= 4) {
+                  const rawPreCode = parts[3].trim().replace(/\D/g, '');
+                  if (rawPreCode.length === 7) {
+                    preCodeStr = rawPreCode;
+                  }
+                }
+              }
+            }
+            
+            // Only set if exactly 7 digits
             if (preCodeStr.length === 7) {
               cleaned.preCode = preCodeStr;
             }
@@ -282,7 +300,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         customerName: string;
         customerPhone: string;
         customerAddress: string;
-        preCode?: string;
+        preCode: string | null;
         success: boolean;
         error?: string;
       }> = [];
@@ -315,7 +333,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             customerName: invoiceData.customerName,
             customerPhone: invoiceData.customerPhone,
             customerAddress: invoiceData.customerAddress,
-            preCode: invoiceData.preCode || undefined,
+            preCode: invoiceData.preCode,
             success: true,
           });
         } catch (invoiceError: any) {
@@ -325,7 +343,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             customerName: customer.name,
             customerPhone: customer.phone,
             customerAddress: customer.address,
-            preCode: customer.preCode,
+            preCode: customer.preCode || null,
             success: false,
             error: invoiceError.message || 'Unknown error',
           });
