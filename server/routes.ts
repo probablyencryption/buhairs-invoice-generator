@@ -220,13 +220,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid format. Must be 'pdf' or 'jpeg'" });
       }
 
-      // Validate maximum 20 customers
-      const lines = rawData.trim().split('\n').filter(line => line.trim() !== '');
-      if (lines.length > 20) {
+      // Validate maximum 20 customers and normalize raw lines
+      const rawLines = rawData.trim().split('\n').filter(line => line.trim() !== '');
+      if (rawLines.length > 20) {
         return res.status(400).json({ error: "Maximum 20 customers allowed per bulk upload" });
       }
 
-      if (lines.length === 0) {
+      if (rawLines.length === 0) {
         return res.status(400).json({ error: "No customer data provided" });
       }
 
@@ -239,11 +239,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const systemPrompt = includePre
-        ? `You are a data extraction assistant. Extract customer information from the provided text and return it as a JSON array. Each customer should have: name, phone, address, and preCode (7-digit number only, no 'PRE' prefix). If a PRE code is not exactly 7 digits, set it to null. The data is separated by colons (:). Return ONLY valid JSON array, no markdown formatting.`
+        ? `You are a data extraction assistant. Extract customer information from the provided text and return it as a JSON array. Each customer should have: name, phone, address, and preCode. For PRE codes: ALWAYS strip any "PRE" prefix and return ONLY the 7-digit number. Examples: "PRE7812344" becomes "7812344", "PRE 1234567" becomes "1234567". If you cannot find exactly 7 digits, set preCode to null. The data is separated by colons (:). Return ONLY valid JSON array, no markdown formatting.`
         : `You are a data extraction assistant. Extract customer information from the provided text and return it as a JSON array. Each customer should have: name, phone, and address. The data is separated by colons (:). Return ONLY valid JSON array, no markdown formatting.`;
 
       const userPrompt = includePre
-        ? `Extract customer data from this text. Each line is separated by colons and contains: Name : Phone : Address : PRE Code (7 digits). Return as JSON array with fields: name, phone, address, preCode.\n\n${rawData}`
+        ? `Extract customer data from this text. Each line is separated by colons and contains: Name : Phone : Address : PRE Code. IMPORTANT: Strip any "PRE" prefix from codes and return only the 7 digits. Return as JSON array with fields: name, phone, address, preCode (7 digits only, no prefix).\n\n${rawData}`
         : `Extract customer data from this text. Each line is separated by colons and contains: Name : Phone : Address. Return as JSON array with fields: name, phone, address.\n\n${rawData}`;
 
       const completion = await openai.chat.completions.create({
@@ -281,20 +281,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
 
           if (includePre) {
-            // Try to get PRE code from OpenAI response
-            let preCodeStr = customer.preCode ? customer.preCode.toString().trim().replace(/\D/g, '') : '';
+            let preCodeStr = '';
             
-            // Fallback: Parse from raw data if OpenAI didn't extract it
-            if (!preCodeStr && rawData) {
-              const rawLines = rawData.trim().split('\n');
-              if (rawLines[index]) {
-                const parts = rawLines[index].split(':');
-                if (parts.length >= 4) {
-                  const rawPreCode = parts[3].trim().replace(/\D/g, '');
-                  if (rawPreCode.length === 7) {
-                    preCodeStr = rawPreCode;
-                  }
+            // PRIMARY METHOD: Parse directly from raw data (using normalized rawLines array)
+            if (rawLines[index]) {
+              const parts = rawLines[index].split(':');
+              if (parts.length >= 4) {
+                // Extract last field (4th position) and strip all non-digits
+                // This handles both "PRE7812344" and "7812344" formats
+                const rawPreCode = parts[3].trim().replace(/\D/g, '');
+                if (rawPreCode.length === 7) {
+                  preCodeStr = rawPreCode;
                 }
+              }
+            }
+            
+            // FALLBACK: Use OpenAI extraction if raw parsing failed
+            if (!preCodeStr && customer.preCode) {
+              const openaiPreCode = customer.preCode.toString().trim().replace(/\D/g, '');
+              if (openaiPreCode.length === 7) {
+                preCodeStr = openaiPreCode;
               }
             }
             
