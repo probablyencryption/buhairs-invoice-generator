@@ -281,7 +281,7 @@ export default function HomePage() {
                 <img src={logoUrl} alt="Bu Luxury Hairs" className="h-12 w-auto" />
               )}
               <div>
-                <h1 className="text-2xl font-semibold text-foreground">Bu Luxury Hairs</h1>
+                <h1 className="text-2xl font-semibold text-foreground">BU HAIRS - Invoice Generator</h1>
                 <p className="text-sm text-muted-foreground">Invoice Generation System</p>
               </div>
             </div>

@@ -52,7 +52,7 @@ export default function PasswordPrompt({ onAuthenticated }: PasswordPromptProps)
           <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
             <Lock className="h-8 w-8 text-primary" />
           </div>
-          <h1 className="text-2xl font-semibold mb-2">Bu Luxury Hairs</h1>
+          <h1 className="text-2xl font-semibold mb-2">BU HAIRS - Invoice Generator</h1>
           <p className="text-sm text-muted-foreground text-center">
             Enter your password to access the invoice maker
           </p>
@@ -79,9 +79,9 @@ export default function PasswordPrompt({ onAuthenticated }: PasswordPromptProps)
             </p>
           )}
 
-          <Button 
-            type="submit" 
-            className="w-full" 
+          <Button
+            type="submit"
+            className="w-full"
             disabled={isLoading}
             data-testid="button-login"
           >
