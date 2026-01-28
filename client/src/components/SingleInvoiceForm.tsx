@@ -51,9 +51,9 @@ export default function SingleInvoiceForm({ onGenerate, onPreview, logoUrl, onLo
   useEffect(() => {
     if (invoiceData?.lastInvoiceNumber !== undefined) {
       const nextNumber = invoiceData.lastInvoiceNumber + 1;
-      setInvoiceNumber(`BLH#${nextNumber}`);
+      setInvoiceNumber(`BH#${nextNumber}`);
     } else {
-      setInvoiceNumber('BLH#2799');
+      setInvoiceNumber('BH#3100');
     }
   }, [invoiceData]);
 
@@ -93,7 +93,7 @@ export default function SingleInvoiceForm({ onGenerate, onPreview, logoUrl, onLo
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await onGenerate(getFormData(), downloadFormat);
-    
+
     setCustomerName('');
     setCustomerPhone('');
     setCustomerAddress('');
@@ -139,7 +139,7 @@ export default function SingleInvoiceForm({ onGenerate, onPreview, logoUrl, onLo
             className="bg-muted flex-1"
             data-testid="input-invoice-number"
           />
-          <InvoiceNumberControl 
+          <InvoiceNumberControl
             currentNumber={invoiceData?.lastInvoiceNumber || 2799}
             onRefresh={handleRefreshInvoiceNumber}
           />
@@ -284,10 +284,10 @@ export default function SingleInvoiceForm({ onGenerate, onPreview, logoUrl, onLo
       </div>
 
       <div className="flex gap-3">
-        <Button 
-          type="button" 
-          variant="outline" 
-          className="flex-1" 
+        <Button
+          type="button"
+          variant="outline"
+          className="flex-1"
           size="lg"
           onClick={handlePreview}
           disabled={!isFormValid}
@@ -296,9 +296,9 @@ export default function SingleInvoiceForm({ onGenerate, onPreview, logoUrl, onLo
           <Eye className="h-4 w-4 mr-2" />
           Preview
         </Button>
-        <Button 
-          type="submit" 
-          className="flex-1" 
+        <Button
+          type="submit"
+          className="flex-1"
           size="lg"
           disabled={!isFormValid}
           data-testid="button-generate-download"

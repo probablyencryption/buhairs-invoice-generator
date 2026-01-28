@@ -4,7 +4,7 @@ export default function InvoiceHistoryExample() {
   const mockInvoices = [
     {
       id: '1',
-      invoiceNumber: 'BLH#2799',
+      invoiceNumber: 'BH#3100',
       date: '19/11/2025',
       customerName: 'Adeyemi Emmanuel',
       customerPhone: '09168518900',
@@ -12,7 +12,7 @@ export default function InvoiceHistoryExample() {
     },
     {
       id: '2',
-      invoiceNumber: 'BLH#2800',
+      invoiceNumber: 'BH#3101',
       date: '20/11/2025',
       customerName: 'Chioma Okafor',
       customerPhone: '08012345678',
@@ -20,7 +20,7 @@ export default function InvoiceHistoryExample() {
     },
     {
       id: '3',
-      invoiceNumber: 'BLH#2801',
+      invoiceNumber: 'BH#3102',
       date: '20/11/2025',
       customerName: 'Ibrahim Musa',
       customerPhone: '07087654321',

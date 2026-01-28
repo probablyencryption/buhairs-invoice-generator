@@ -32,14 +32,14 @@ export const invoiceStorage = {
   getNextInvoiceNumber(): string {
     const settings = this.getSettings();
     const nextNumber = settings.lastInvoiceNumber + 1;
-    return `BLH#${nextNumber}`;
+    return `BH#${nextNumber}`;
   },
 
   incrementInvoiceNumber(): string {
     const settings = this.getSettings();
     settings.lastInvoiceNumber += 1;
     this.saveSettings(settings);
-    return `BLH#${settings.lastInvoiceNumber}`;
+    return `BH#${settings.lastInvoiceNumber}`;
   },
 
   getAllInvoices(): InvoiceData[] {

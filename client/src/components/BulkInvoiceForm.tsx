@@ -34,20 +34,20 @@ export default function BulkInvoiceForm({ onGenerate, isProcessing = false }: Bu
 
   const validateAndGenerate = (formatType: 'pdf' | 'jpeg') => {
     setValidationError('');
-    
+
     // Count number of lines (customers)
     const lines = rawData.trim().split('\n').filter(line => line.trim() !== '');
-    
+
     if (lines.length === 0) {
       setValidationError('Please enter at least one customer');
       return;
     }
-    
+
     if (lines.length > 20) {
       setValidationError('Maximum 20 customers allowed per bulk upload');
       return;
     }
-    
+
     onGenerate({
       date: format(date, 'dd/MM/yyyy'),
       rawData,
@@ -66,14 +66,14 @@ export default function BulkInvoiceForm({ onGenerate, isProcessing = false }: Bu
         <code className="text-sm bg-background p-3 rounded-md block">
           {includePre ? (
             <>
-              Name : Phone Number : Address : PRE Code<br/>
-              John Doe : 08012345678 : 123 Main Street, Lagos : 7812344<br/>
+              Name : Phone Number : Address : PRE Code<br />
+              John Doe : 08012345678 : 123 Main Street, Lagos : 7812344<br />
               Jane Smith : 09087654321 : 456 Park Avenue, Abuja : 7923456
             </>
           ) : (
             <>
-              Name : Phone Number : Address<br/>
-              John Doe : 08012345678 : 123 Main Street, Lagos<br/>
+              Name : Phone Number : Address<br />
+              John Doe : 08012345678 : 123 Main Street, Lagos<br />
               Jane Smith : 09087654321 : 456 Park Avenue, Abuja
             </>
           )}
@@ -89,18 +89,18 @@ export default function BulkInvoiceForm({ onGenerate, isProcessing = false }: Bu
           <div className="flex items-center gap-2">
             <Input
               id="lastInvoiceNumber"
-              value={`BLH#${invoiceData?.lastInvoiceNumber || 2799}`}
+              value={`BH#${invoiceData?.lastInvoiceNumber || 3100}`}
               readOnly
               className="bg-muted flex-1"
               data-testid="input-last-invoice-number"
             />
-            <InvoiceNumberControl 
-              currentNumber={invoiceData?.lastInvoiceNumber || 2799}
+            <InvoiceNumberControl
+              currentNumber={invoiceData?.lastInvoiceNumber || 3100}
               onRefresh={handleRefreshInvoiceNumber}
             />
           </div>
           <p className="text-xs text-muted-foreground">
-            Next batch will start from BLH#{(invoiceData?.lastInvoiceNumber || 2799) + 1}
+            Next batch will start from BH#{(invoiceData?.lastInvoiceNumber || 3100) + 1}
           </p>
         </div>
 
@@ -169,10 +169,10 @@ export default function BulkInvoiceForm({ onGenerate, isProcessing = false }: Bu
         )}
 
         <div className="grid grid-cols-2 gap-4">
-          <Button 
+          <Button
             onClick={() => validateAndGenerate('pdf')}
-            className="w-full" 
-            size="lg" 
+            className="w-full"
+            size="lg"
             disabled={isProcessing}
             data-testid="button-process-bulk-pdf"
           >
@@ -186,10 +186,10 @@ export default function BulkInvoiceForm({ onGenerate, isProcessing = false }: Bu
             )}
           </Button>
 
-          <Button 
+          <Button
             onClick={() => validateAndGenerate('jpeg')}
-            className="w-full" 
-            size="lg" 
+            className="w-full"
+            size="lg"
             variant="outline"
             disabled={isProcessing}
             data-testid="button-process-bulk-jpeg"

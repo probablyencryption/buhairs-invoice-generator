@@ -9,18 +9,18 @@ import OpenAI from "openai";
 
 async function requireAuth(req: Request, res: Response, next: NextFunction) {
   const sessionToken = req.headers['x-app-session'];
-  
+
   if (!sessionToken) {
     return res.status(401).json({ error: 'Unauthorized - no session' });
   }
-  
+
   try {
     const activeSession = await storage.getSetting("active_session");
-    
+
     if (activeSession && sessionToken === activeSession.value) {
       return next();
     }
-    
+
     return res.status(401).json({ error: 'Unauthorized - invalid session' });
   } catch (error) {
     return res.status(500).json({ error: 'Server error' });
@@ -28,18 +28,18 @@ async function requireAuth(req: Request, res: Response, next: NextFunction) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  
+
   app.post("/api/auth/verify", async (req, res) => {
     try {
       const { password } = req.body;
       const passwordSetting = await storage.getSetting("app_password");
-      
+
       if (!passwordSetting) {
         const defaultPassword = await storage.setSetting({
           key: "app_password",
           value: "bu2025",
         });
-        
+
         if (password === defaultPassword.value) {
           const sessionToken = `bu_session_${Date.now()}_${Math.random().toString(36)}`;
           await storage.setSetting({
@@ -49,7 +49,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.json({ success: true, token: sessionToken });
         }
       }
-      
+
       if (passwordSetting && password === passwordSetting.value) {
         const sessionToken = `bu_session_${Date.now()}_${Math.random().toString(36)}`;
         await storage.setSetting({
@@ -58,7 +58,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         return res.json({ success: true, token: sessionToken });
       }
-      
+
       res.status(401).json({ success: false, message: "Invalid password" });
     } catch (error) {
       res.status(500).json({ success: false, message: "Server error" });
@@ -72,22 +72,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/settings/logo", async (req, res) => {
     try {
       const logoSetting = await storage.getSetting("app_logo");
-      
+
       if (!logoSetting) {
-        const logoPath = path.join(process.cwd(), "attached_assets", "Logo png_1763664358506.PNG");
+        const logoPath = path.join(process.cwd(), "attached_assets", "BU-LOGO.png");
         if (fs.existsSync(logoPath)) {
           const logoBuffer = fs.readFileSync(logoPath);
           const logoBase64 = `data:image/png;base64,${logoBuffer.toString("base64")}`;
-          
+
           const newLogo = await storage.setSetting({
             key: "app_logo",
             value: logoBase64,
           });
-          
+
           return res.json({ logo: newLogo.value });
         }
       }
-      
+
       res.json({ logo: logoSetting?.value || null });
     } catch (error) {
       res.status(500).json({ logo: null });
@@ -110,33 +110,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/settings/invoice-number", requireAuth, async (req, res) => {
     try {
       const setting = await storage.getSetting("last_invoice_number");
-      
+
       if (!setting) {
         const newSetting = await storage.setSetting({
           key: "last_invoice_number",
-          value: "2799",
+          value: "3100",
         });
         return res.json({ lastInvoiceNumber: parseInt(newSetting.value) });
       }
-      
+
       res.json({ lastInvoiceNumber: parseInt(setting.value) });
     } catch (error) {
-      res.status(500).json({ lastInvoiceNumber: 2799 });
+      res.status(500).json({ lastInvoiceNumber: 3100 });
     }
   });
 
   app.post("/api/settings/invoice-number/increment", requireAuth, async (req, res) => {
     try {
       const setting = await storage.getSetting("last_invoice_number");
-      const currentNumber = setting ? parseInt(setting.value) : 2799;
+      const currentNumber = setting ? parseInt(setting.value) : 3100;
       const nextNumber = currentNumber + 1;
-      
+
       await storage.setSetting({
         key: "last_invoice_number",
         value: nextNumber.toString(),
       });
-      
-      res.json({ invoiceNumber: `BLH#${nextNumber}` });
+
+      res.json({ invoiceNumber: `BH#${nextNumber}` });
     } catch (error) {
       res.status(500).json({ error: "Failed to increment invoice number" });
     }
@@ -154,11 +154,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/settings/last-invoice", requireAuth, async (req, res) => {
     try {
       const { invoiceNumber } = req.body;
-      
+
       if (!invoiceNumber || typeof invoiceNumber !== 'number') {
         return res.status(400).json({ error: "Invalid invoice number" });
       }
-      
+
       await storage.updateLastInvoiceNumber(invoiceNumber);
       res.json({ lastInvoiceNumber: invoiceNumber });
     } catch (error: any) {
@@ -170,25 +170,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertInvoiceSchema.parse(req.body);
       const invoice = await storage.createInvoice(validatedData);
-      
+
       const setting = await storage.getSetting("last_invoice_number");
       const currentNumber = setting ? parseInt(setting.value) : 2799;
       const nextNumber = currentNumber + 1;
-      
+
       await storage.setSetting({
         key: "last_invoice_number",
         value: nextNumber.toString(),
       });
-      
-      res.json({ 
-        invoice, 
-        nextInvoiceNumber: `BLH#${nextNumber}`
+
+      res.json({
+        invoice,
+        nextInvoiceNumber: `BH#${nextNumber}`
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ 
-          error: "Invalid invoice data", 
-          details: error.errors 
+        return res.status(400).json({
+          error: "Invalid invoice data",
+          details: error.errors
         });
       }
       res.status(500).json({ error: "Failed to create invoice" });
@@ -256,7 +256,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const responseText = completion.choices[0]?.message?.content?.trim() || '';
-      
+
       let parsedData: Array<{
         name: string;
         phone: string;
@@ -267,7 +267,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const cleanedResponse = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
         parsedData = JSON.parse(cleanedResponse);
-        
+
         if (!Array.isArray(parsedData)) {
           throw new Error('Response is not an array');
         }
@@ -282,7 +282,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           if (includePre) {
             let preCodeStr = '';
-            
+
             // PRIMARY METHOD: Parse directly from raw data (using normalized rawLines array)
             if (rawLines[index]) {
               const parts = rawLines[index].split(':');
@@ -295,7 +295,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 }
               }
             }
-            
+
             // FALLBACK: Use OpenAI extraction if raw parsing failed
             if (!preCodeStr && customer.preCode) {
               const openaiPreCode = customer.preCode.toString().trim().replace(/\D/g, '');
@@ -303,7 +303,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 preCodeStr = openaiPreCode;
               }
             }
-            
+
             // Only set if exactly 7 digits
             if (preCodeStr.length === 7) {
               cleaned.preCode = preCodeStr;
@@ -315,9 +315,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       } catch (parseError) {
         console.error('Failed to parse OpenAI response:', responseText);
-        return res.status(500).json({ 
+        return res.status(500).json({
           error: "Failed to parse customer data from AI response",
-          details: responseText 
+          details: responseText
         });
       }
 
@@ -338,7 +338,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (const customer of parsedData) {
         try {
           currentNumber++;
-          const invoiceNumber = `BLH#${currentNumber}`;
+          const invoiceNumber = `BH#${currentNumber}`;
 
           const invoiceData = {
             invoiceNumber,
@@ -368,7 +368,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         } catch (invoiceError: any) {
           invoicesCreated.push({
-            invoiceNumber: `BLH#${currentNumber}`,
+            invoiceNumber: `BH#${currentNumber}`,
             date,
             customerName: customer.name,
             customerPhone: customer.phone,
@@ -383,9 +383,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ invoices: invoicesCreated });
     } catch (error: any) {
       console.error('Bulk processing error:', error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: "Failed to process bulk data",
-        message: error.message 
+        message: error.message
       });
     }
   });

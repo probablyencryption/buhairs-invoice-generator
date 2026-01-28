@@ -3,7 +3,7 @@ import InvoicePreview from '../InvoicePreview';
 export default function InvoicePreviewExample() {
   return (
     <InvoicePreview
-      invoiceNumber="BLH#2799"
+      invoiceNumber="BH#3100"
       date="19/11/2025"
       customerName="Adeyemi Emmanuel"
       customerPhone="091685189​00"

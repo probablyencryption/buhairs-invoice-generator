@@ -18,7 +18,7 @@ export default function HomePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeTab, setActiveTab] = useState('single');
   const [previewData, setPreviewData] = useState({
-    invoiceNumber: 'BLH#2799',
+    invoiceNumber: 'BH#3100',
     date: new Date().toLocaleDateString('en-GB'),
     customerName: '',
     customerPhone: '',
@@ -34,7 +34,7 @@ export default function HomePage() {
     const validateSession = async () => {
       const authenticated = sessionStorage.getItem('bu_authenticated');
       const sessionToken = sessionStorage.getItem('bu_session');
-      
+
       if (authenticated === 'true' && sessionToken) {
         try {
           const response = await fetch('/api/auth/session', {
@@ -42,7 +42,7 @@ export default function HomePage() {
               'x-app-session': sessionToken,
             },
           });
-          
+
           if (response.ok) {
             setIsAuthenticated(true);
           } else {
@@ -61,7 +61,7 @@ export default function HomePage() {
         setIsAuthenticated(false);
       }
     };
-    
+
     validateSession();
   }, []);
 
@@ -119,7 +119,7 @@ export default function HomePage() {
     format: 'pdf' | 'jpeg'
   ) => {
     setPreviewData({ ...data, preCode: data.preCode || undefined });
-    
+
     if (!invoicePreviewRef.current) {
       toast({
         title: 'Error',
@@ -128,14 +128,14 @@ export default function HomePage() {
       });
       return;
     }
-    
+
     try {
       const invoiceResponse = await apiRequest('POST', '/api/invoices', data);
       const responseData = await invoiceResponse.json();
-      
+
       await queryClient.invalidateQueries({ queryKey: ['/api/settings/invoice-number'] });
       await queryClient.invalidateQueries({ queryKey: ['/api/invoices'] });
-      
+
       // Wait for DOM to update and all styles to be applied
       await new Promise(resolve => setTimeout(resolve, 150));
 
@@ -169,7 +169,7 @@ export default function HomePage() {
 
   const handleBulkGenerate = async (data: { date: string; rawData: string; includePre: boolean; format: 'pdf' | 'jpeg' }) => {
     setIsBulkProcessing(true);
-    
+
     try {
       toast({
         title: 'Processing...',
@@ -184,7 +184,7 @@ export default function HomePage() {
       });
 
       const result = await response.json();
-      
+
       if (!result.invoices || result.invoices.length === 0) {
         toast({
           title: 'No invoices created',
@@ -227,7 +227,7 @@ export default function HomePage() {
         format: data.format,
         logo: logoUrl || null,
       };
-      
+
       sessionStorage.setItem('bulk_results', JSON.stringify(bulkResultsData));
 
       toast({
