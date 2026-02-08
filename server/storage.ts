@@ -86,10 +86,8 @@ export class DbStorage implements IStorage {
       if (newNumber < 2799) {
         throw new Error('Invoice number cannot be less than 2799');
       }
-      const currentNumber = await this.getLastInvoiceNumber();
-      if (newNumber < currentNumber) {
-        throw new Error(`Invoice number cannot be less than current number (${currentNumber})`);
-      }
+      // Validation removed to allow free modification of invoice number
+     
       await this.setSetting({ key: 'last_invoice_number', value: newNumber.toString() });
     } catch (error) {
       console.error('Error updating last invoice number:', error);

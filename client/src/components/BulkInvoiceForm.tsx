@@ -16,9 +16,10 @@ import { Input } from '@/components/ui/input';
 interface BulkInvoiceFormProps {
   onGenerate: (data: { date: string; rawData: string; includePre: boolean; format: 'pdf' | 'jpeg' }) => void;
   isProcessing?: boolean;
+  isHybridMode?: boolean;
 }
 
-export default function BulkInvoiceForm({ onGenerate, isProcessing = false }: BulkInvoiceFormProps) {
+export default function BulkInvoiceForm({ onGenerate, isProcessing = false, isHybridMode = false }: BulkInvoiceFormProps) {
   const [date, setDate] = useState<Date>(new Date());
   const [rawData, setRawData] = useState('');
   const [includePre, setIncludePre] = useState(false);
@@ -66,15 +67,15 @@ export default function BulkInvoiceForm({ onGenerate, isProcessing = false }: Bu
         <code className="text-sm bg-background p-3 rounded-md block">
           {includePre ? (
             <>
-              Name : Phone Number : Address : PRE Code<br />
-              John Doe : 08012345678 : 123 Main Street, Lagos : 7812344<br />
-              Jane Smith : 09087654321 : 456 Park Avenue, Abuja : 7923456
+              Name : Phone Number : Address : PRE Code{isHybridMode ? ' : Invoice Number' : ''}<br />
+              John Doe : 08012345678 : 123 Main Street, Lagos : 7812344{isHybridMode ? ' : BH#Manual1' : ''}<br />
+              Jane Smith : 09087654321 : 456 Park Avenue, Abuja : 7923456{isHybridMode ? ' : BH#Manual2' : ''}
             </>
           ) : (
             <>
-              Name : Phone Number : Address<br />
-              John Doe : 08012345678 : 123 Main Street, Lagos<br />
-              Jane Smith : 09087654321 : 456 Park Avenue, Abuja
+              Name : Phone Number : Address{isHybridMode ? ' : Invoice Number' : ''}<br />
+              John Doe : 08012345678 : 123 Main Street, Lagos{isHybridMode ? ' : BH#Manual1' : ''}<br />
+              Jane Smith : 09087654321 : 456 Park Avenue, Abuja{isHybridMode ? ' : BH#Manual2' : ''}
             </>
           )}
         </code>
@@ -89,7 +90,7 @@ export default function BulkInvoiceForm({ onGenerate, isProcessing = false }: Bu
           <div className="flex items-center gap-2">
             <Input
               id="lastInvoiceNumber"
-              value={`BH#${invoiceData?.lastInvoiceNumber || 3100}`}
+              value={`BHS#${invoiceData?.lastInvoiceNumber || 3100}`}
               readOnly
               className="bg-muted flex-1"
               data-testid="input-last-invoice-number"
@@ -100,7 +101,7 @@ export default function BulkInvoiceForm({ onGenerate, isProcessing = false }: Bu
             />
           </div>
           <p className="text-xs text-muted-foreground">
-            Next batch will start from BH#{(invoiceData?.lastInvoiceNumber || 3100) + 1}
+            Next batch will start from BHS#{(invoiceData?.lastInvoiceNumber || 3100) + 1}
           </p>
         </div>
 

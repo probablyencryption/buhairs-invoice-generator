@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import SingleInvoiceForm from '@/components/SingleInvoiceForm';
 import BulkInvoiceForm from '@/components/BulkInvoiceForm';
@@ -17,8 +19,9 @@ import { useLocation } from 'wouter';
 export default function HomePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeTab, setActiveTab] = useState('single');
+  const [isHybridMode, setIsHybridMode] = useState(false);
   const [previewData, setPreviewData] = useState({
-    invoiceNumber: 'BH#3100',
+    invoiceNumber: 'BHS#3100',
     date: new Date().toLocaleDateString('en-GB'),
     customerName: '',
     customerPhone: '',
@@ -120,6 +123,11 @@ export default function HomePage() {
   ) => {
     setPreviewData({ ...data, preCode: data.preCode || undefined });
 
+    if (isHybridMode) {
+      // @ts-ignore - appending extra flag for API
+      data.manual = true;
+    }
+
     if (!invoicePreviewRef.current) {
       toast({
         title: 'Error',
@@ -181,6 +189,7 @@ export default function HomePage() {
         includePre: data.includePre,
         date: data.date,
         format: data.format,
+        manual: isHybridMode
       });
 
       const result = await response.json();
@@ -217,8 +226,10 @@ export default function HomePage() {
         return;
       }
 
-      // Invalidate queries to refresh invoice history
-      await queryClient.invalidateQueries({ queryKey: ['/api/settings/invoice-number'] });
+      // Invalidate queries to refresh invoice history (only if auto-increment was used, but good to refresh anyway)
+      if (!isHybridMode) {
+        await queryClient.invalidateQueries({ queryKey: ['/api/settings/invoice-number'] });
+      }
       await queryClient.invalidateQueries({ queryKey: ['/api/invoices'] });
 
       // Store results in sessionStorage and navigate to results page
@@ -285,6 +296,18 @@ export default function HomePage() {
                 <p className="text-sm text-muted-foreground">Invoice Generation System</p>
               </div>
             </div>
+
+            <div className="flex items-center space-x-2 bg-secondary/50 p-2 rounded-lg border">
+              <Switch
+                id="hybrid-mode"
+                checked={isHybridMode}
+                onCheckedChange={setIsHybridMode}
+                data-testid="switch-hybrid-mode"
+              />
+              <Label htmlFor="hybrid-mode" className="cursor-pointer">
+                {isHybridMode ? 'Hybrid / Manual Mode' : 'Auto Numbering Mode'}
+              </Label>
+            </div>
           </div>
         </div>
       </header>
@@ -323,6 +346,7 @@ export default function HomePage() {
                   onPreview={handlePreview}
                   logoUrl={logoUrl || undefined}
                   onLogoUpload={handleLogoUpload}
+                  isHybridMode={isHybridMode}
                 />
               </Card>
 
@@ -339,7 +363,11 @@ export default function HomePage() {
             <div className="grid lg:grid-cols-2 gap-6">
               <Card className="p-6">
                 <h2 className="text-xl font-semibold mb-6">Bulk Invoice Generation</h2>
-                <BulkInvoiceForm onGenerate={handleBulkGenerate} isProcessing={isBulkProcessing} />
+                <BulkInvoiceForm
+                  onGenerate={handleBulkGenerate}
+                  isProcessing={isBulkProcessing}
+                  isHybridMode={isHybridMode}
+                />
               </Card>
 
               <div className="space-y-4">

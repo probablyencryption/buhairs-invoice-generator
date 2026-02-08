@@ -136,7 +136,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         value: nextNumber.toString(),
       });
 
-      res.json({ invoiceNumber: `BH#${nextNumber}` });
+      res.json({ invoiceNumber: `BHS#${nextNumber}` });
     } catch (error) {
       res.status(500).json({ error: "Failed to increment invoice number" });
     }
@@ -168,21 +168,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/invoices", requireAuth, async (req, res) => {
     try {
-      const validatedData = insertInvoiceSchema.parse(req.body);
+      const body = req.body;
+      const isManual = body.manual === true;
+
+      // If manual, we don't need to generate an ID if one is provided
+      // But the schema expects invoiceNumber. 
+      // The client should provide it in the body.
+
+      const validatedData = insertInvoiceSchema.parse(body);
       const invoice = await storage.createInvoice(validatedData);
 
-      const setting = await storage.getSetting("last_invoice_number");
-      const currentNumber = setting ? parseInt(setting.value) : 2799;
-      const nextNumber = currentNumber + 1;
+      let nextNumberVal = "N/A";
 
-      await storage.setSetting({
-        key: "last_invoice_number",
-        value: nextNumber.toString(),
-      });
+      if (!isManual) {
+        const setting = await storage.getSetting("last_invoice_number");
+        const currentNumber = setting ? parseInt(setting.value) : 2799;
+        const nextNumber = currentNumber + 1;
+
+        await storage.setSetting({
+          key: "last_invoice_number",
+          value: nextNumber.toString(),
+        });
+        nextNumberVal = `BHS#${nextNumber}`;
+      } else {
+        // In manual mode, we don't increment the global counter
+        // We just return the current next number for reference
+        const setting = await storage.getSetting("last_invoice_number");
+        const currentNumber = setting ? parseInt(setting.value) : 2799;
+        nextNumberVal = `BHS#${currentNumber + 1}`;
+      }
 
       res.json({
         invoice,
-        nextInvoiceNumber: `BH#${nextNumber}`
+        nextInvoiceNumber: nextNumberVal
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -206,7 +224,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/invoices/bulk-process", requireAuth, async (req, res) => {
     try {
-      const { rawData, includePre, date, format } = req.body;
+      const { rawData, includePre, date, format, manual } = req.body;
+      const isManual = manual === true;
 
       if (!rawData || typeof rawData !== 'string') {
         return res.status(400).json({ error: "Invalid customer data" });
@@ -238,19 +257,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         apiKey: process.env.OPENAI_API_KEY,
       });
 
-      const systemPrompt = includePre
-        ? `You are a data extraction assistant. Extract customer information from the provided text and return it as a JSON array. Each customer should have: name, phone, address, and preCode. For PRE codes: ALWAYS strip any "PRE" prefix and return ONLY the 7-digit number. Examples: "PRE7812344" becomes "7812344", "PRE 1234567" becomes "1234567". If you cannot find exactly 7 digits, set preCode to null. The data is separated by colons (:). Return ONLY valid JSON array, no markdown formatting.`
-        : `You are a data extraction assistant. Extract customer information from the provided text and return it as a JSON array. Each customer should have: name, phone, and address. The data is separated by colons (:). Return ONLY valid JSON array, no markdown formatting.`;
+      const systemPrompt =
+        isManual
+          ? `You are a data extraction assistant. Extract customer information from the provided text and return it as a JSON array. Each customer should have: name, phone, address, preCode, and invoiceNumber. The input format is typically "Name : Phone : Address : PRE : Invoice Number". The "PRE" part is optional. Invoice Number usually starts with "BH#". Return ONLY valid JSON array, no markdown.`
+          : includePre
+            ? `You are a data extraction assistant. Extract customer information from the provided text and return it as a JSON array. Each customer should have: name, phone, address, and preCode. For PRE codes: ALWAYS strip any "PRE" prefix and return ONLY the 7-digit number. Examples: "PRE7812344" becomes "7812344", "PRE 1234567" becomes "1234567". If you cannot find exactly 7 digits, set preCode to null. The data is separated by colons (:). Return ONLY valid JSON array, no markdown formatting.`
+            : `You are a data extraction assistant. Extract customer information from the provided text and return it as a JSON array. Each customer should have: name, phone, and address. The data is separated by colons (:). Return ONLY valid JSON array, no markdown formatting.`;
 
-      const userPrompt = includePre
-        ? `Extract customer data from this text. Each line is separated by colons and contains: Name : Phone : Address : PRE Code. IMPORTANT: Strip any "PRE" prefix from codes and return only the 7 digits. Return as JSON array with fields: name, phone, address, preCode (7 digits only, no prefix).\n\n${rawData}`
-        : `Extract customer data from this text. Each line is separated by colons and contains: Name : Phone : Address. Return as JSON array with fields: name, phone, address.\n\n${rawData}`;
+      const userPrompt =
+        isManual
+          ? `Extract customer data. Format: Name : Phone : Address : (Optional PRE) : Invoice Number. Extract "invoiceNumber" exactly as written. Extract "preCode" if present (7 digits). Return JSON array.`
+          : includePre
+            ? `Extract customer data from this text. Each line is separated by colons and contains: Name : Phone : Address : PRE Code. IMPORTANT: Strip any "PRE" prefix from codes and return only the 7 digits. Return as JSON array with fields: name, phone, address, preCode (7 digits only, no prefix).\n\n${rawData}`
+            : `Extract customer data from this text. Each line is separated by colons and contains: Name : Phone : Address. Return as JSON array with fields: name, phone, address.\n\n${rawData}`;
+
+      // If manual, we append the raw data to the new prompt structure
+      const finalUserPrompt = isManual ? `${userPrompt}\n\n${rawData}` : userPrompt;
 
       const completion = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt }
+          { role: "user", content: finalUserPrompt }
         ],
         temperature: 0.1,
       });
@@ -262,6 +290,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         phone: string;
         address: string;
         preCode?: string;
+        invoiceNumber?: string;
       }> = [];
 
       try {
@@ -278,6 +307,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             phone: customer.phone?.trim() || '',
             address: customer.address?.trim() || '',
             preCode: null, // Default to null
+            invoiceNumber: customer.invoiceNumber?.trim() || null
           };
 
           if (includePre) {
@@ -310,6 +340,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
 
+          if (isManual && !cleaned.invoiceNumber) {
+            // Manual fallbacks if AI failed to get invoice number
+            if (rawLines[index]) {
+              const parts = rawLines[index].split(':');
+              // Assuming invoice number is last
+              if (parts.length >= 1) {
+                const lastPart = parts[parts.length - 1].trim();
+                if (lastPart.toUpperCase().startsWith('BH#') || lastPart.toUpperCase().startsWith('BH#') || parts.length >= 3) {
+                  // Basic heuristic: if it looks like an invoice ID or is the 3rd/4th field
+                  cleaned.invoiceNumber = lastPart;
+                }
+              }
+            }
+          }
+
           return cleaned;
         });
 
@@ -338,7 +383,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (const customer of parsedData) {
         try {
           currentNumber++;
-          const invoiceNumber = `BH#${currentNumber}`;
+          // If manual mode:
+          // 1. Use provided number if available
+          // 2. If missing, use a fallback "BH#XXXX" (to signify null/error as requested)
+          // 3. DO NOT use BHS# prefix for manual mode
+
+          let invoiceNumber = '';
+
+          if (isManual) {
+            if (customer.invoiceNumber) {
+              invoiceNumber = customer.invoiceNumber;
+            } else {
+              // Use hardcoded placeholder for missing manual invoice number
+              invoiceNumber = `BH#XXXX`;
+            }
+          } else {
+            // Auto mode always uses BHS prefix and the incremented counter
+            invoiceNumber = `BHS#${currentNumber}`;
+          }
 
           const invoiceData = {
             invoiceNumber,
@@ -352,10 +414,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const validatedData = insertInvoiceSchema.parse(invoiceData);
           await storage.createInvoice(validatedData);
 
-          await storage.setSetting({
-            key: "last_invoice_number",
-            value: currentNumber.toString(),
-          });
+          // Only update global counter if NOT manual
+          if (!isManual) {
+            await storage.setSetting({
+              key: "last_invoice_number",
+              value: currentNumber.toString(),
+            });
+          } else {
+            // If manual, we need to respect the loop's local auto-increment 
+            // incase we switch back to auto for some reason (though mixed mode isn't really supported per-line)
+            // But actually, if we are in manual mode, 'currentNumber' shouldn't have been incremented really.
+            // Let's revert currentNumber increment for the next iteration if we didn't use it? 
+            // The prompt implies "Single / Bulk" toggle, so entire batch is manual or auto.
+            // If manual, currentNumber doesn't matter.
+            currentNumber--; // Revert the increment since we didn't use it for this manual invoice
+          }
 
           invoicesCreated.push({
             invoiceNumber: invoiceData.invoiceNumber,
@@ -368,7 +441,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         } catch (invoiceError: any) {
           invoicesCreated.push({
-            invoiceNumber: `BH#${currentNumber}`,
+            invoiceNumber: `BHS#${currentNumber}`,
             date,
             customerName: customer.name,
             customerPhone: customer.phone,

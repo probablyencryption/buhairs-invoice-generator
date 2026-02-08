@@ -21,6 +21,7 @@ interface SingleInvoiceFormProps {
     customerPhone: string;
     customerAddress: string;
     preCode?: string;
+    manual?: boolean;
   }, format: 'pdf' | 'jpeg') => void;
   onPreview: (data: {
     invoiceNumber: string;
@@ -32,9 +33,10 @@ interface SingleInvoiceFormProps {
   }) => void;
   logoUrl?: string;
   onLogoUpload: (dataUrl: string) => void;
+  isHybridMode?: boolean;
 }
 
-export default function SingleInvoiceForm({ onGenerate, onPreview, logoUrl, onLogoUpload }: SingleInvoiceFormProps) {
+export default function SingleInvoiceForm({ onGenerate, onPreview, logoUrl, onLogoUpload, isHybridMode }: SingleInvoiceFormProps) {
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [date, setDate] = useState<Date>(new Date());
   const [customerName, setCustomerName] = useState('');
@@ -49,13 +51,21 @@ export default function SingleInvoiceForm({ onGenerate, onPreview, logoUrl, onLo
   });
 
   useEffect(() => {
-    if (invoiceData?.lastInvoiceNumber !== undefined) {
-      const nextNumber = invoiceData.lastInvoiceNumber + 1;
-      setInvoiceNumber(`BH#${nextNumber}`);
-    } else {
-      setInvoiceNumber('BH#3100');
+    if (!isHybridMode) {
+      if (invoiceData?.lastInvoiceNumber !== undefined) {
+        const nextNumber = invoiceData.lastInvoiceNumber + 1;
+        setInvoiceNumber(`BHS#${nextNumber}`);
+      } else {
+        setInvoiceNumber('BHS#3100');
+      }
+    } else if (invoiceNumber === '') {
+      // Initialize for hybrid mode too if empty
+      if (invoiceData?.lastInvoiceNumber !== undefined) {
+        const nextNumber = invoiceData.lastInvoiceNumber + 1;
+        setInvoiceNumber(`BHS#${nextNumber}`);
+      }
     }
-  }, [invoiceData]);
+  }, [invoiceData, isHybridMode]); // Re-run when hybrid mode toggles
 
   const handleRefreshInvoiceNumber = () => {
     refetchInvoiceNumber();
@@ -99,9 +109,11 @@ export default function SingleInvoiceForm({ onGenerate, onPreview, logoUrl, onLo
     setCustomerAddress('');
     setPreCode('');
     setHasPreCode(false);
+
+   
   };
 
-  const isFormValid = customerName && customerPhone && customerAddress && (!hasPreCode || preCode);
+  const isFormValid = customerName && customerPhone && customerAddress && (!hasPreCode || preCode) && invoiceNumber;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6" data-testid="form-single-invoice">
@@ -135,17 +147,23 @@ export default function SingleInvoiceForm({ onGenerate, onPreview, logoUrl, onLo
           <Input
             id="invoiceNumber"
             value={invoiceNumber}
-            readOnly
-            className="bg-muted flex-1"
+            onChange={(e) => isHybridMode && setInvoiceNumber(e.target.value)}
+            readOnly={!isHybridMode}
+            className={isHybridMode ? "bg-background font-mono" : "bg-muted flex-1"}
             data-testid="input-invoice-number"
           />
-          <InvoiceNumberControl
-            currentNumber={invoiceData?.lastInvoiceNumber || 2799}
-            onRefresh={handleRefreshInvoiceNumber}
-          />
+          {!isHybridMode && (
+            <InvoiceNumberControl
+              currentNumber={invoiceData?.lastInvoiceNumber || 2799}
+              onRefresh={handleRefreshInvoiceNumber}
+            />
+          )}
         </div>
         <p className="text-xs text-muted-foreground">
-          Click refresh to see the latest invoice number or edit to update it manually
+          {isHybridMode
+            ? "Enter custom invoice number (Hybrid Mode)"
+            : "Click refresh to see the latest invoice number or edit via Settings"
+          }
         </p>
       </div>
 
